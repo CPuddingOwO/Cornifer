@@ -1,0 +1,14 @@
+[Equivalences]
+LM, SL
+RM, SS
+UG, DS
+CL, SH
+MS, DM
+
+[Replacements]
+: UX-UW, SX-SS
+
+Spear: SL-LM
+Artificer: SL-LM
+Saint: DS-UG, SS-RM, SH-CL
+Rivulet: SS-RM

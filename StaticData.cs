@@ -1,4 +1,4 @@
-﻿using Cornifer.Structures;
+using Cornifer.Structures;
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
@@ -48,53 +48,12 @@ namespace Cornifer
 		public static readonly HashSet<string> VanillaRegions = new() { "CC", "DS", "HI", "GW", "SI", "SU", "SH", "SL", "LF", "UW", "SB", "SS" };
 
         // TODO: equivalences.txt
-        public static readonly Dictionary<string, List<string>> RegionEquivalences = new()
-        {
-            ["LM"] = new() { "SL" },
-            ["RM"] = new() { "SS" },
-            ["UG"] = new() { "DS" },
-            ["CL"] = new() { "SH" },
-            ["MS"] = new() { "DM" },
-            ["SL"] = new() { "LM" },
-            ["SS"] = new() { "RM" },
-            ["DS"] = new() { "UG" },
-            ["SH"] = new() { "CL" },
-            ["DM"] = new() { "MS" },
-        };
+        public static Dictionary<string, List<string>> RegionEquivalences = new();
 
         // Slugcat -> { DefaultRegion -> StoryRegion }
         // Saint -> { DS -> UG }
         // TODO: equivalences.txt Region.GetProperRegionAcronym
-        public static Dictionary<string, Dictionary<string, string>> SlugcatRegionReplacements = new()
-        {
-            [""] = new()
-            {
-                ["UX"] = "UW",
-                ["SX"] = "SS"
-            },
-
-            ["Spear"] = new()
-            {
-                ["SL"] = "LM"
-            },
-
-            ["Artificer"] = new()
-            {
-                ["SL"] = "LM"
-            },
-
-            ["Saint"] = new()
-            {
-                ["DS"] = "UG",
-                ["SS"] = "RM",
-                ["SH"] = "CL",
-            },
-
-            ["Rivulet"] = new()
-            {
-                ["SS"] = "RM",
-            }
-        };
+        public static Dictionary<string, Dictionary<string, string>> SlugcatRegionReplacements = new();
 
         public static Dictionary<string, List<string>> SlugcatRegionAvailability = new()
         {
@@ -145,7 +104,64 @@ namespace Cornifer
 			["WRFB_D09"] = "WTDB",
 		};
 
-		public static void Init() {
+        private static void LoadEquivalences()
+        {
+            string path = Path.Combine(Main.MainDir, "Assets/equivalences.txt");
+            if (!File.Exists(path))
+                return;
+
+            string[] lines = File.ReadAllLines(path);
+            string? currentSection = null;
+
+            foreach (string line in lines)
+            {
+                if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#"))
+                    continue;
+
+                if (line.StartsWith("[") && line.EndsWith("]"))
+                {
+                    currentSection = line.Substring(1, line.Length - 2);
+                    continue;
+                }
+
+                if (currentSection == "Equivalences")
+                {
+                    string[] parts = line.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length < 2) continue;
+
+                    foreach (string p1 in parts)
+                    {
+                        if (!RegionEquivalences.TryGetValue(p1, out List<string>? list))
+                            RegionEquivalences[p1] = list = new();
+
+                        foreach (string p2 in parts)
+                            if (p1 != p2 && !list.Contains(p2))
+                                list.Add(p2);
+                    }
+                }
+                else if (currentSection == "Replacements")
+                {
+                    string[] parts = line.Split(':', StringSplitOptions.TrimEntries);
+                    string slugcat = parts[0];
+                    string[] replacements = parts[1].Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+                    if (!SlugcatRegionReplacements.TryGetValue(slugcat, out var dict))
+                        SlugcatRegionReplacements[slugcat] = dict = new();
+
+                    foreach (string replacement in replacements)
+                    {
+                        string[] kv = replacement.Split('-', StringSplitOptions.TrimEntries);
+                        if (kv.Length == 2)
+                        {
+                            dict[kv[0]] = kv[1];
+                        }
+                    }
+                }
+            }
+        }
+
+        public static void Init() {
+            LoadEquivalences();
 			InitSlugcats();
 			InitPearls();
 			InitVistas();

@@ -1,4 +1,4 @@
-﻿using Cornifer.Connections;
+using Cornifer.Connections;
 using Cornifer.Helpers;
 using Cornifer.MapObjects;
 using Cornifer.Structures;
@@ -12,6 +12,8 @@ using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Timers;
 
 namespace Cornifer
@@ -21,6 +23,7 @@ namespace Cornifer
         static Regex GateNameRegex = new("GATE_(.+)?_(.+)", RegexOptions.Compiled);
 
         public string Id = "";
+        public ColorRef RegionColor = null!;
         public List<Room> Rooms = new();
 
         public Subregion[] Subregions = Array.Empty<Subregion>();
@@ -52,6 +55,16 @@ namespace Cornifer
 
             LegacyFormat = RWAssets.CurrentInstallation?.IsLegacy is true;
             Id = info.Id.ToUpper();
+
+            RegionColor = ColorDatabase.GetRegionColor(Id, null);
+            string? regionColorFile = RWAssets.ResolveFile(Path.Combine(info.Path, "regioncolor.txt"));
+            if (regionColorFile != null)
+            {
+                Color? c = ColorDatabase.ParseColor(File.ReadAllText(regionColorFile).Trim());
+                if (c.HasValue)
+                    RegionColor.Color = c.Value;
+            }
+
             WorldString = worldFile;
             PropertiesString = mainProperties;
             MapString = mapFile;
@@ -73,24 +86,34 @@ namespace Cornifer
 
             using (TaskProgress roomProgress = new("Loading rooms", Rooms.Count))
             {
-                for (int i = 0; i < Rooms.Count; i++)
+                int loadedCount = 0;
+                Parallel.ForEach(Rooms, room =>
                 {
-                    Room r = Rooms[i];
-                    string roomFileName = (r.replaceRoomName ?? r.Name)!;
-                    string roomPath = r.Name.StartsWith("GATE") ? $"world/gates/{roomFileName}" : $"{info.RoomsPath}/{roomFileName}";
+                    string roomFileName = (room.replaceRoomName ?? room.Name)!;
+                    string roomPath = room.Name.StartsWith("GATE") ? $"world/gates/{roomFileName}" : $"{info.RoomsPath}/{roomFileName}";
 
                     string? settings = RWAssets.ResolveSlugcatFile(roomPath + "_settings.txt");
+                    if (settings is null)
+                    {
+                        string templatePath = Path.Combine(Main.MainDir, "Assets/room_settings_template.txt");
+                        if (File.Exists(templatePath))
+                            settings = templatePath;
+                    }
+
                     string? data = RWAssets.ResolveFile(roomPath + ".txt");
 
                     if (data is null)
                     {
-                        Main.LoadErrors.Add($"Could not find data for room {r.Name}");
-                        continue;
+                        lock (Main.LoadErrors)
+                            Main.LoadErrors.Add($"Could not find data for room {room.Name}");
+                        return;
                     }
 
-                    r.Load(File.ReadAllText(data!), settings is null ? null : File.ReadAllText(settings));
-                    roomProgress.Progress = i + 1;
-                }
+                    room.Load(File.ReadAllText(data!), settings is null ? null : File.ReadAllText(settings));
+                    
+                    int current = Interlocked.Increment(ref loadedCount);
+                    roomProgress.Progress = current;
+                });
             }
             progress.Progress = 4;
 

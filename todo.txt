@@ -1,9 +1,5 @@
 --- Region loading
 
-equivalences.txt
-regioncolor.txt (Region.RegionColor)
-Room settings templates
-Threaded region loading
 
 
 --- UI
