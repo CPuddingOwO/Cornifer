@@ -1,6 +1,10 @@
 # Cornifer
 
-Rain World mapping tool
+Rain World mapping tool (Multi Region Version)
+
+# Warning !!!
+
+Some code comes from AI, such as Gemini ChatGPT.
 
 ### Usage
 
