@@ -590,7 +590,20 @@ namespace Cornifer
                     if (!room.Positioned)
                         room.ActiveProperty.OriginalValue = false;
 
-                Main.LoadErrors.Add($"{nonPositionedRooms.Count} rooms aren't positioned! Hiding {nonPositionedRooms.Count(r => !r.Positioned)} of them.");
+                int totalNonPositioned = nonPositionedRooms.Count;
+                var remaining = nonPositionedRooms.Where(r => !r.Positioned).ToArray();
+                int hidingCount = remaining.Length;
+                var remainingNames = remaining.Select(r => r.Name).ToArray();
+                var hiddenNames = remainingNames.Where(n => hideRooms.ContainsKey(n)).ToArray();
+                var excludedNames = remainingNames.Where(n => exclusiveRooms.ContainsKey(n)).ToArray();
+
+                string details = $"Region {Id}: {totalNonPositioned} rooms weren't initially positioned. " +
+                                 $"Hiding {hidingCount} rooms that remain unpositioned. " +
+                                 $"Rooms: {string.Join(", ", remainingNames)}" +
+                                 (hiddenNames.Length > 0 ? $". Hidden: {string.Join(", ", hiddenNames)}" : "") +
+                                 (excludedNames.Length > 0 ? $". Excluded: {string.Join(", ", excludedNames)}" : "");
+
+                Main.LoadErrors.Add(details);
             }
 
             foreach (var group in Rooms.Where(r => r.Subregion.OriginalValue.Id >= 0 && r.Subregion.Value.DisplayName.Length > 0).GroupBy(r => r.Subregion.OriginalValue))
