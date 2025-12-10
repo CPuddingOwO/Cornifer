@@ -1,4 +1,5 @@
-﻿using Cornifer.Helpers;
+using Cornifer.Connections;
+using Cornifer.Helpers;
 using Cornifer.Input;
 using Cornifer.Json;
 using Cornifer.MapObjects;
@@ -39,6 +40,8 @@ namespace Cornifer
 
         public static Main Instance = null!;
 
+        public static List<Region> Regions = new();
+        public static RegionConnections GlobalConnections = new(new());
         public static Region? Region;
 
         public static Texture2D Pixel = null!;
@@ -278,7 +281,12 @@ namespace Cornifer
             bool inRoomConnections = InRoomConnectionsLayer.Visible;
             bool anyConnections = betweenRoomConnections || inRoomConnections;
             if (active && anyConnections)
-                Region?.Connections?.Update(betweenRoomConnections, inRoomConnections);
+            {
+                foreach (Region r in Regions)
+                    r.Connections?.Update(betweenRoomConnections, inRoomConnections);
+                
+                GlobalConnections.Update(betweenRoomConnections, inRoomConnections);
+            }
 
             foreach (Layer l in Layers)
                 if (l.Visible)
@@ -637,7 +645,16 @@ namespace Cornifer
         {
             Vector2 mouseWorld = WorldCamera.InverseTransformVector(InputHandler.MouseState.Position.ToVector2());
 
-            bool prevented = !active || Dragging || Selecting || Interface.Hovered || (Region?.Connections?.Hovered ?? false);
+            bool hoveredConnection = GlobalConnections.Hovered;
+            if (!hoveredConnection)
+                foreach (Region r in Regions)
+                    if (r.Connections?.Hovered ?? false)
+                    {
+                        hoveredConnection = true;
+                        break;
+                    }
+
+            bool prevented = !active || Dragging || Selecting || Interface.Hovered || hoveredConnection;
 
             KeybindState dragState = InputHandler.Drag.State;
 
@@ -837,7 +854,7 @@ namespace Cornifer
             }
         }
 
-        public static Task LoadRegion(RegionInfo info)
+        public static Task LoadRegion(RegionInfo info, bool merge = false)
         {
             List<string>? worldFile = RWAssets.ResolveUnmergedSlugcatFiles($"{info.Path}/world_{info.Id}.txt");
             List<string>? mapFile = RWAssets.ResolveUnmergedSlugcatFiles($"{info.Path}/map_{info.Id}.txt");
@@ -893,13 +910,16 @@ namespace Cornifer
 
                 try
                 {
-                    lock (DrawLock)
+                    if (!merge)
                     {
-                        Layers.Clear();
-                        Layers.AddRange(DefaultLayers);
-                        foreach (Layer l in Layers)
-                            l.Visible = l.DefaultVisibility;
-                        UI.Pages.Layers.UpdateLayerList();
+                        lock (DrawLock)
+                        {
+                            Layers.Clear();
+                            Layers.AddRange(DefaultLayers);
+                            foreach (Layer l in Layers)
+                                l.Visible = l.DefaultVisibility;
+                            UI.Pages.Layers.UpdateLayerList();
+                        }
                     }
 
                     Region region = new(info, MergeFiles(worldFile), MergeFiles(mapFile), MergeFiles(propertiesFile), MergeFiles(slugcatPropertiesFile));
@@ -908,6 +928,11 @@ namespace Cornifer
                     {
                         try
                         {
+                            if (!merge)
+                            {
+                                Regions.Clear();
+                            }
+
                             lock (DrawLock)
                             {
                                 Region = region;
@@ -938,6 +963,7 @@ namespace Cornifer
             WorldObjectLists.Clear();
             WorldObjectLists.Add(WorldObjects);
             WorldObjectLists.Add(FirstPrioritySelectionObjects);
+            Regions.Clear();
             Region = null;
         }
         public static void RegionLoaded(Region region)
@@ -947,12 +973,23 @@ namespace Cornifer
             Selecting = false;
             Dragging = false;
 
+            if (!Regions.Contains(region))
+                Regions.Add(region);
+            Region = region;
+
             WorldObjectLists.Clear();
-            WorldObjectLists.Add(region.ObjectLists);
+            foreach (Region r in Regions)
+            {
+                WorldObjectLists.Add(r.ObjectLists);
+                if (r.Connections is not null)
+                    WorldObjectLists.Add(r.Connections.PointObjectLists);
+            }
+            UpdateRegionLinks();
+            if (GlobalConnections.PointObjectLists.Count() > 0)
+                WorldObjectLists.Add(GlobalConnections.PointObjectLists);
+            
             WorldObjectLists.Add(WorldObjects);
             WorldObjectLists.Add(FirstPrioritySelectionObjects);
-            if (region.Connections is not null)
-                WorldObjectLists.Add(region.Connections.PointObjectLists);
             WorldObjects.Clear();
 
             foreach (MapObject obj in WorldObjectLists)
@@ -963,6 +1000,73 @@ namespace Cornifer
             }
 
             Interface.RegionChanged(region);
+        }
+
+        public static void UpdateRegionLinks()
+        {
+            GlobalConnections.RoomConnections.Clear();
+            GlobalConnections.PointObjectLists.Clear();
+
+            List<Connection> existingConnections = new();
+            foreach (var conn in GlobalConnections.AllConnections)
+                existingConnections.Add(conn);
+
+            GlobalConnections.RoomConnections.Clear(); // Clear dictionary but keep connection objects reference for now
+
+            for (int i = 0; i < Regions.Count; i++)
+            {
+                Region r1 = Regions[i];
+                for (int j = i + 1; j < Regions.Count; j++)
+                {
+                    Region r2 = Regions[j];
+
+                    foreach (Room room1 in r1.Rooms)
+                    {
+                        if (!room1.IsGate && !room1.RippleWarp) continue;
+                        foreach (Room room2 in r2.Rooms)
+                        {
+                            if (!room2.IsGate && !room2.RippleWarp) continue;
+
+                            if (room1.Name == room2.Name)
+                            {
+                                Connection? conn = existingConnections.FirstOrDefault(c => c.Source.Name == room1.Name && c.Destination.Name == room2.Name);
+                                if (conn is null)
+                                {
+                                    // Try reverse lookup as well
+                                    conn = existingConnections.FirstOrDefault(c => c.Source.Name == room2.Name && c.Destination.Name == room1.Name);
+                                }
+
+                                if (conn is null)
+                                {
+                                    conn = new(room1, room2);
+                                }
+                                else
+                                {
+                                    if (conn.Source.Name == room1.Name)
+                                    {
+                                        conn.Source = room1;
+                                        conn.Destination = room2;
+                                    }
+                                    else
+                                    {
+                                        conn.Source = room2;
+                                        conn.Destination = room1;
+                                    }
+
+                                    // Ensure points have correct parent references
+                                    if (conn.Points.Count >= 2)
+                                    {
+                                        conn.Points[0].Parent = conn.Source;
+                                        conn.Points[^1].Parent = conn.Destination;
+                                    }
+                                }
+                                GlobalConnections.RoomConnections[(room1.Name!, room2.Name!)] = conn;
+                                GlobalConnections.PointObjectLists.Add(conn.Points);
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         public static void FocusOnObject(MapObject obj)
@@ -996,9 +1100,14 @@ namespace Cornifer
             {
                 ["slugcat"] = SelectedSlugcat?.Id,
                 ["installFeatures"] = (int?)(RWAssets.CurrentInstallation?.Features & RainWorldInstallation.StateEssentialFeatures),
-                ["region"] = Region?.SaveJson(),
-                ["connections"] = Region?.Connections?.SaveJson(),
-                ["objects"] = new JsonArray(WorldObjectLists.Enumerate().Select(o => o.SaveJson()).OfType<JsonNode>().ToArray()),
+                ["regions"] = new JsonArray(Regions.Select(r => new JsonObject
+                {
+                    ["region"] = r.SaveJson(),
+                    ["connections"] = r.Connections?.SaveJson(),
+                    ["active"] = r == Region
+                }).ToArray()),
+                ["regionLinks"] = GlobalConnections.SaveJson(),
+                ["objects"] = new JsonArray(WorldObjectLists.Enumerate().Where(o => o is not Room).Select(o => o.SaveJson()).OfType<JsonNode>().ToArray()),
                 ["interface"] = InterfaceState.SaveJson(),
                 ["colors"] = ColorDatabase.SaveJson(),
                 ["layers"] = new JsonArray(Layers.Select(l =>
@@ -1033,15 +1142,52 @@ namespace Cornifer
             {
                 SelectedSlugcat = StaticData.Slugcats.FirstOrDefault(s => s.Id.Equals(slugcat, StringComparison.InvariantCultureIgnoreCase));
             }
-            if (!shallow && node.TryGet("region", out JsonNode? region))
+
+            if (!shallow)
             {
-                ClearRegion();
-                Region = new();
-                Region.LoadJson(region);
-                RegionLoaded(Region);
+                if (node.TryGet("regions", out JsonArray? regions))
+                {
+                    ClearRegion();
+                    foreach (JsonNode? rNode in regions)
+                    {
+                        if (rNode is null) continue;
+
+                        if (rNode.TryGet("region", out JsonNode? regionData))
+                        {
+                            Region r = new();
+                            r.LoadJson(regionData);
+
+                            if (!Regions.Contains(r))
+                                Regions.Add(r);
+
+                            if (rNode.TryGet("connections", out JsonNode? connections))
+                                r.Connections?.LoadJson(connections);
+
+                            if (rNode.TryGet("active", out bool active) && active)
+                                Region = r;
+                        }
+                    }
+                    if (Region is null && Regions.Count > 0)
+                        Region = Regions.Last();
+
+                    if (Region is not null)
+                        RegionLoaded(Region);
+
+                    if (node.TryGet("regionLinks", out JsonNode? regionLinks))
+                    {
+                        GlobalConnections.LoadJson(regionLinks);
+                    }
+                }
+                else if (node.TryGet("region", out JsonNode? region))
+                {
+                    ClearRegion();
+                    Region = new();
+                    Region.LoadJson(region);
+                    if (node.TryGet("connections", out JsonNode? connections))
+                        Region.Connections?.LoadJson(connections);
+                    RegionLoaded(Region);
+                }
             }
-            if (node.TryGet("connections", out JsonNode? connections))
-                Region?.Connections?.LoadJson(connections);
 
             if (node.TryGet("layers", out JsonArray? layers))
             {
@@ -1102,7 +1248,8 @@ namespace Cornifer
             if (node.TryGet("interface", out JsonNode? @interface))
                 InterfaceState.LoadJson(@interface);
 
-            Region?.PostRegionLoad();
+            foreach (Region r in Regions)
+                r.PostRegionLoad();
         }
 
         public static async Task OpenState()

@@ -703,13 +703,16 @@ namespace Cornifer.MapObjects
 			}
 
 			if (GateData is not null && IsGate) {
-				Children.Add(GateSymbols = new GateSymbols(GateData.LeftKarma, GateData.RightKarma));
-				Children.Add(GateRegionText = new MapText("TargetRegionText", Main.DefaultBigMapFont, $"Region Text"));
+                if (GateSymbols is null)
+                {
+                    Children.Add(GateSymbols = new GateSymbols(GateData.LeftKarma, GateData.RightKarma));
+                    Children.Add(GateRegionText = new MapText("TargetRegionText", Main.DefaultBigMapFont, $"Region Text"));
 
-				GateRegionText.NoAlignOverride = true;
-				GateRegionText.IconPosAlign = new(.5f);
-				GateSymbols.Offset = new(0, MathF.Floor(-Size.Y / 2 - GateSymbols.Size.Y / 2 - 5));
-				GateRegionText.Offset = new(0, MathF.Floor(-Size.Y / 2 - GateSymbols.Size.Y - 19 - Main.DefaultBigMapFont.LineSpacing / 2));
+                    GateRegionText.NoAlignOverride = true;
+                    GateRegionText.IconPosAlign = new(.5f);
+                    GateSymbols.Offset = new(0, MathF.Floor(-Size.Y / 2 - GateSymbols.Size.Y / 2 - 5));
+                    GateRegionText.Offset = new(0, MathF.Floor(-Size.Y / 2 - GateSymbols.Size.Y - 19 - Main.DefaultBigMapFont.LineSpacing / 2));
+                }
 			}
 
             if (!Region.LegacyFormat && StaticData.VistaRooms.TryGetValue(Name!, out Vector2 vistaPoint))

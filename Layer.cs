@@ -1,4 +1,4 @@
-﻿using Cornifer.MapObjects;
+using Cornifer.MapObjects;
 using Cornifer.Renderers;
 using System;
 using System.Collections.Generic;
@@ -61,18 +61,35 @@ namespace Cornifer
 
         public override void DrawShade(Renderer renderer, Predicate<MapObject>? predicate = null)
         {
-            Main.Region?.Connections?.DrawShadows(renderer, !InRoomConnections, InRoomConnections, predicate);
+            foreach (var region in Main.Regions)
+                region.Connections?.DrawShadows(renderer, !InRoomConnections, InRoomConnections, predicate);
+
+            if (!InRoomConnections)
+                Main.GlobalConnections.DrawShadows(renderer, true, false, predicate);
         }
 
         public override void Draw(Renderer renderer, Predicate<MapObject>? predicate = null)
         {
-            Main.Region?.Connections?.DrawConnections(renderer, true,  !InRoomConnections, InRoomConnections, predicate);
-            Main.Region?.Connections?.DrawConnections(renderer, false, !InRoomConnections, InRoomConnections, predicate);
+            foreach (var region in Main.Regions)
+            {
+                region.Connections?.DrawConnections(renderer, true, !InRoomConnections, InRoomConnections, predicate);
+                region.Connections?.DrawConnections(renderer, false, !InRoomConnections, InRoomConnections, predicate);
+            }
+
+            if (!InRoomConnections)
+            {
+                Main.GlobalConnections.DrawConnections(renderer, true, true, false, predicate);
+                Main.GlobalConnections.DrawConnections(renderer, false, true, false, predicate);
+            }
         }
 
         public override void DrawGuides(Renderer renderer)
         {
-            Main.Region?.Connections?.DrawGuideLines(renderer, !InRoomConnections, InRoomConnections);
+            foreach (var region in Main.Regions)
+                region.Connections?.DrawGuideLines(renderer, !InRoomConnections, InRoomConnections);
+
+            if (!InRoomConnections)
+                Main.GlobalConnections.DrawGuideLines(renderer, true, false);
         }
     }
 }

@@ -976,7 +976,14 @@ namespace Cornifer
                     ["name"] = s.Name,
                     ["background"] = s.BackgroundColor.SaveJson(),
                     ["water"] = s.WaterColor.SaveJson(),
-                }).ToArray())
+                }).ToArray()),
+                ["gateTargets"] = new JsonObject(Rooms.Where(r => r.GateData?.TargetRegionName is not null).Select(r => new KeyValuePair<string, JsonNode?>(r.Name!, r.GateData!.TargetRegionName))),
+                ["roomPositions"] = new JsonObject(Rooms.Where(r => r.Positioned).Select(r => new KeyValuePair<string, JsonNode?>(r.Name!, new JsonObject
+                {
+                    ["x"] = r.WorldPosition.X,
+                    ["y"] = r.WorldPosition.Y
+                }))),
+                ["roomObjects"] = new JsonArray(Rooms.Select(r => r.SaveJson()).ToArray())
             };
         }
 
@@ -1032,6 +1039,32 @@ namespace Cornifer
                         room.Load(roomData, settings);
                         room.Loaded = true;
                     }
+            }
+            
+            if (node.TryGet("roomPositions", out JsonObject? roomPositions))
+            {
+                foreach (var (roomId, posNode) in roomPositions)
+                {
+                    if (posNode is JsonObject posObj && TryGetRoom(roomId, out Room? room))
+                    {
+                        if (posObj.TryGet("x", out float x) && posObj.TryGet("y", out float y))
+                        {
+                            room.WorldPosition = new Vector2(x, y);
+                            room.Positioned = true;
+                        }
+                    }
+                }
+            }
+
+            if (node.TryGet("roomObjects", out JsonArray? roomObjects))
+            {
+                foreach (JsonNode? roomNode in roomObjects)
+                {
+                    if (roomNode is JsonObject roomObj && roomObj.TryGet("name", out string? name) && TryGetRoom(name, out Room? room))
+                    {
+                        room.LoadJson(roomObj, false);
+                    }
+                }
             }
 
             if (node.TryGet("subregions", out JsonArray? subregions))

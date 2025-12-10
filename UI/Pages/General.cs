@@ -1,4 +1,4 @@
-﻿using Cornifer.MapObjects;
+using Cornifer.MapObjects;
 using Cornifer.UI.Elements;
 using Cornifer.UI.Modals;
 using Cornifer.UI.Structures;
@@ -20,12 +20,23 @@ namespace Cornifer.UI.Pages
                 new UIButton
                 {
                     Top = 0,
-
+                    Width = new(-22, 1),
                     Height = 25,
                     Text = "Select region",
 
                     TextAlign = new(.5f)
                 }.OnEvent(ClickEvent, async (_, _) => await SelectRegionClicked()),
+
+                new UIButton
+                {
+                    Top = 0,
+                    Left = new(0, 1, -1),
+                    Width = 20,
+                    Height = 25,
+                    Text = "+",
+
+                    TextAlign = new(.5f)
+                }.OnEvent(ClickEvent, async (_, _) => await AddRegionClicked()),
 
                 new UIList()
                 {
@@ -317,6 +328,23 @@ namespace Cornifer.UI.Pages
                 return;
 
             Main.TryCatchReleaseException(() => Main.OverlayImage = Texture2D.FromFile(Main.Instance.GraphicsDevice, filename), "Could not load overlay image");
+        }
+
+        public static async Task<bool> AddRegionClicked()
+        {
+            if (Main.SelectedSlugcat is null)
+            {
+                await SelectRegionClicked();
+                return true;
+            }
+
+            RegionSelect.Result? region = await RegionSelect.ShowDialog(Main.SelectedSlugcat);
+            if (!region.HasValue)
+                return false;
+
+            RWAssets.EnableMods = !region.Value.ExcludeMods;
+            await Main.LoadRegion(region.Value.Region, true);
+            return true;
         }
 
         public static async Task<bool> SelectRegionClicked()

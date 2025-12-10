@@ -1,4 +1,4 @@
-﻿using Cornifer.Json;
+using Cornifer.Json;
 using Cornifer.MapObjects;
 using Cornifer.UI.Elements;
 using Microsoft.Xna.Framework;
@@ -54,6 +54,19 @@ namespace Cornifer.Connections
                     ParentPosition = point.ToVector2()
                 });
             }
+        }
+
+        public bool IsRegionLink = false;
+
+        public Connection(Room source, Room destination)
+        {
+            Source = source;
+            Destination = destination;
+            Invalid = false;
+            IsRegionLink = true;
+
+            Points.Add(new(this) { Parent = Source, ParentPosition = Source.Size / 2 });
+            Points.Add(new(this) { Parent = Destination, ParentPosition = Destination.Size / 2 });
         }
 
         public Connection(Room source, Room.Connection connection)

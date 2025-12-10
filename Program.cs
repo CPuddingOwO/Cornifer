@@ -1,4 +1,4 @@
-﻿using Cornifer;
+using Cornifer;
 using System;
 using System.IO;
 
@@ -35,7 +35,7 @@ using System.IO;
 //return;
 
 Platform.Start(args);
-var game = new Main();
+using var game = new Main();
 
 #if DEBUG
 

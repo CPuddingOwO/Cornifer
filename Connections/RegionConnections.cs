@@ -1,4 +1,4 @@
-﻿using Cornifer;
+using Cornifer;
 using Cornifer.Helpers;
 using Cornifer.Input;
 using Cornifer.MapObjects;
@@ -6,6 +6,7 @@ using Cornifer.Renderers;
 using Cornifer.UI;
 using Cornifer.UI.Structures;
 using Cornifer.UndoActions;
+using Cornifer.Structures;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -13,6 +14,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Nodes;
+using Cornifer.Structures;
 
 namespace Cornifer.Connections
 {
@@ -20,6 +22,7 @@ namespace Cornifer.Connections
     {
         public static Texture2D? ConnectionTexture;
 		public static Texture2D? ShortcutTexture;
+		public static Texture2D? ShadowTexture;
 
         public Dictionary<(string src, string dst), Connection> RoomConnections = new();
         public Dictionary<(string room, Point shortcut), Connection> InRoomConnections = new();
@@ -222,12 +225,23 @@ namespace Cornifer.Connections
 
         public void DrawShadows(Renderer renderer, bool betweenRooms, bool inRooms, Predicate<MapObject>? predicate = null)
         {
+            DrawShadowsList(renderer, AllConnections, betweenRooms, inRooms, predicate);
+        }
+
+        public void DrawShadowsList(Renderer renderer, IEnumerable<Connection> connections, bool betweenRooms, bool inRooms, Predicate<MapObject>? predicate = null)
+        {
+            if (ShadowTexture is null)
+            {
+                ShadowTexture = new(Main.Instance.GraphicsDevice, 1, 1);
+                ShadowTexture.SetData(new Color[] { Color.White });
+            }
+
             var state = Main.SpriteBatch.GetState();
             Main.SpriteBatch.End();
 
             int size = 5;
 
-            foreach (Connection connection in AllConnections)
+            foreach (Connection connection in connections)
             {
                 if (!connection.Active || (connection.IsInRoomShortcut ? !inRooms : !betweenRooms))
                     continue;
@@ -254,6 +268,10 @@ namespace Cornifer.Connections
                     }
                 }
 
+                foreach (ConnectionPoint point in connection.Points)
+                    if (!point.NoShadow.Value)
+                        point.DrawShadow(renderer);
+
                 Main.SpriteBatch.End();
                 EndConnectionCapture(renderer);
             }
@@ -262,6 +280,11 @@ namespace Cornifer.Connections
         }
 
         public void DrawConnections(Renderer renderer, bool overRoomShadow, bool betweenRooms, bool inRooms, Predicate<MapObject>? predicate = null)
+        {
+            DrawConnectionsList(renderer, AllConnections, overRoomShadow, betweenRooms, inRooms, predicate);
+        }
+
+        public void DrawConnectionsList(Renderer renderer, IEnumerable<Connection> connections, bool overRoomShadow, bool betweenRooms, bool inRooms, Predicate<MapObject>? predicate = null)
         {
             if (ConnectionTexture is null) {
                 ConnectionTexture = new(Main.Instance.GraphicsDevice, 2, 1);
@@ -276,7 +299,7 @@ namespace Cornifer.Connections
             var state = Main.SpriteBatch.GetState();
             Main.SpriteBatch.End();
 
-            foreach (Connection connection in AllConnections)
+            foreach (Connection connection in connections)
             {
                 if (!connection.Active || (connection.IsInRoomShortcut ? !inRooms : !betweenRooms))
                     continue;
@@ -348,34 +371,129 @@ namespace Cornifer.Connections
                         }
                         else if (!overRoomShadow)
                         {
-                            ConnectionPoint? startPoint = i > 0 ? connection.Points[i - 1] : null;
-                            ConnectionPoint? endPoint = i < connection.Points.Count ? connection.Points[i] : null;
-
-                            if (startPoint is not null && startPoint.SkipPixelAfter.Value)
+                            if (connection.IsRegionLink)
                             {
-                                source.Width -= 1;
-                                origin.X -= 1;
-
-                                length += 1;
+                                Main.SpriteBatch.Draw(Main.Pixel, renderer.TransformVector(start), new Rectangle(0, 0, length, 5), connectionColor, angle, new(0, 2.5f), renderer.Scale, SpriteEffects.None, 0);
                             }
-
-                            if (endPoint is not null && endPoint.SkipPixelBefore.Value)
+                            else
                             {
-                                source.Width -= 1;
-                                length -= 1;
-                            }
+                                ConnectionPoint? startPoint = i > 0 ? connection.Points[i - 1] : null;
+                                ConnectionPoint? endPoint = i < connection.Points.Count ? connection.Points[i] : null;
 
-                            Main.SpriteBatch.Draw(connection.IsInRoomShortcut ? ShortcutTexture : ConnectionTexture, renderer.TransformVector(start), source, connectionColor, angle, origin, renderer.Scale, SpriteEffects.None, 0);
+                                if (startPoint is not null && startPoint.SkipPixelAfter.Value)
+                                {
+                                    source.Width -= 1;
+                                    origin.X -= 1;
+
+                                    length += 1;
+                                }
+
+                                if (endPoint is not null && endPoint.SkipPixelBefore.Value)
+                                {
+                                    source.Width -= 1;
+                                    length -= 1;
+                                }
+
+                                Main.SpriteBatch.Draw(connection.IsInRoomShortcut ? ShortcutTexture : ConnectionTexture, renderer.TransformVector(start), source, connectionColor, angle, origin, renderer.Scale, SpriteEffects.None, 0);
+                            }
                         }
                     }
                     totalLength += length;
                 }
+
+                if (connection.IsRegionLink && !overRoomShadow)
+                {
+                    DrawRegionLinkSymbols(renderer, connection);
+                }
+
+                foreach (ConnectionPoint point in connection.Points)
+                    if (!point.NoShadow.Value)
+                        point.DrawShadow(renderer);
 
                 Main.SpriteBatch.End();
                 EndConnectionCapture(renderer);
             }
 
             Main.SpriteBatch.Begin(state);
+        }
+
+        void DrawRegionLinkSymbols(Renderer renderer, Connection connection)
+        {
+            if (connection.Source.Region is null || connection.Destination.Region is null)
+                return;
+
+            AtlasSprite? leftSprite = GetGateSprite(connection.Source.Region.Id);
+            AtlasSprite? rightSprite = GetGateSprite(connection.Destination.Region.Id);
+
+            if (leftSprite is null && rightSprite is null)
+                return;
+
+            // Draw at Start (i=0)
+            {
+                (Vec2 start, Vec2 end) = GetLinePoints(null, connection, 0);
+                Vector2 diff = end - start;
+                bool horizontal = Math.Abs(diff.X) > Math.Abs(diff.Y);
+                DrawGateSymbolPair(renderer, start, leftSprite, rightSprite, horizontal);
+            }
+
+            // Draw at End (i=Count)
+            {
+                (Vec2 start, Vec2 end) = GetLinePoints(null, connection, connection.Points.Count);
+                Vector2 diff = end - start; // End is the point, start is the previous point
+                bool horizontal = Math.Abs(diff.X) > Math.Abs(diff.Y);
+                // For the end point, the position is 'end'
+                DrawGateSymbolPair(renderer, end, leftSprite, rightSprite, horizontal);
+            }
+        }
+
+        void DrawGateSymbolPair(Renderer renderer, Vector2 position, AtlasSprite? leftSprite, AtlasSprite? rightSprite, bool horizontal)
+        {
+            Vector2 center = position;
+            if (horizontal)
+                center.Y -= 40;
+
+            if (horizontal)
+            {
+                Vector2 splitterSize = new(5, 64);
+                Main.SpriteBatch.Draw(Main.Pixel, renderer.TransformVector(center), null, Color.White, 0f, splitterSize / 2, renderer.Scale * new Vector2(splitterSize.X, splitterSize.Y), SpriteEffects.None, 0);
+            }
+
+            if (leftSprite is not null)
+            {
+                Vector2 spriteSize = leftSprite.Frame.Size.ToVector2();
+                Vector2 offset = new(-14.5f - spriteSize.X, -20 - spriteSize.Y / 2);
+                if (!horizontal)
+                    offset.Y += 20; // Re-center vertically if no splitter/shift
+
+                Vector2 spritePos = center + offset;
+                Main.SpriteBatch.Draw(leftSprite.Texture, renderer.TransformVector(spritePos), leftSprite.Frame, Color.White, 0f, Vector2.Zero, renderer.Scale, SpriteEffects.None, 0);
+            }
+
+            if (rightSprite is not null)
+            {
+                Vector2 spriteSize = rightSprite.Frame.Size.ToVector2();
+                Vector2 offset = new(14.5f, -20 - spriteSize.Y / 2);
+                if (!horizontal)
+                    offset.Y += 20;
+
+                Vector2 spritePos = center + offset;
+                Main.SpriteBatch.Draw(rightSprite.Texture, renderer.TransformVector(spritePos), rightSprite.Frame, Color.White, 0f, Vector2.Zero, renderer.Scale, SpriteEffects.None, 0);
+            }
+        }
+
+        static AtlasSprite? GetGateSprite(string symbol)
+        {
+            if (symbol.EndsWith("alt")) symbol = symbol.Replace("alt", "");
+            string? name = null;
+            if (StaticData.GateSymbols.ContainsKey(symbol))
+            { name = StaticData.GateSymbols[symbol]; }
+
+            if (name is null)
+                name = "GateSymbol_" + symbol;
+
+            if (SpriteAtlases.Sprites.TryGetValue(name, out AtlasSprite? sprite))
+                return sprite;
+            return null;
         }
 
         static void BeginConnectionCapture(Renderer renderer, Connection connection)
@@ -421,7 +539,12 @@ namespace Cornifer.Connections
 
         public void DrawGuideLines(Renderer renderer, bool betweenRooms, bool inRooms)
         {
-            foreach (Connection connection in AllConnections)
+            DrawGuideLinesList(renderer, AllConnections, betweenRooms, inRooms);
+        }
+
+        public void DrawGuideLinesList(Renderer renderer, IEnumerable<Connection> connections, bool betweenRooms, bool inRooms)
+        {
+            foreach (Connection connection in connections)
             {
                 if (!connection.Active || (connection.IsInRoomShortcut ? !inRooms : !betweenRooms))
                     continue;
@@ -501,8 +624,39 @@ namespace Cornifer.Connections
                 reversed = false;
                 return true;
             }
+            if (RoomConnections.TryGetValue((to, from), out connection))
+            {
+                reversed = true;
+                return true;
+            }
+
+            // Fallback for global connections where RoomConnections dictionary might be empty but we have regions
+            if (Main.Regions.Count > 0 && Region.Rooms.Count == 0)
+            {
+                Room? r1 = null;
+                Room? r2 = null;
+
+                foreach (var r in Main.Regions)
+                {
+                    if (r1 is null && r.TryGetRoom(from, out Room? room1)) r1 = room1;
+                    if (r2 is null && r.TryGetRoom(to, out Room? room2)) r2 = room2;
+                    if (r1 is not null && r2 is not null) break;
+                }
+
+                if (r1 is not null && r2 is not null)
+                {
+                    connection = new Connection(r1, r2);
+                    // Add to dictionary so it's found next time or used properly
+                    RoomConnections[(from, to)] = connection;
+                    PointObjectLists.Add(connection.Points);
+                    reversed = false;
+                    return true;
+                }
+            }
+
             reversed = true;
-            return RoomConnections.TryGetValue((to, from), out connection);
+            connection = null;
+            return false;
         }
 
         public bool TryGetInRoomConnection(string room, Point a, Point b, [NotNullWhen(true)] out Connection? connection, out bool reversed)
@@ -639,6 +793,14 @@ namespace Cornifer.Connections
                 }
                 connection.LoadJson(con);
             }
+        }
+    }
+
+    public static class ConnectionPointExtensions
+    {
+        public static void DrawShadow(this ConnectionPoint point, Renderer renderer)
+        {
+            Main.SpriteBatch.Draw(Main.Pixel, renderer.TransformVector(point.WorldPosition), new Rectangle(0, 0, 5, 5), new Color(0, 0, 0, 100), 0f, new Vector2(2.5f), renderer.Scale, SpriteEffects.None, 0);
         }
     }
 }

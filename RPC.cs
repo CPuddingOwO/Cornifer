@@ -26,7 +26,7 @@ namespace Cornifer
 			Client = new("1365462705099509913");
 
 			//Set the logger
-			Client.Logger = new ConsoleLogger() { Level = LogLevel.Warning };
+			Client.Logger = new QuietConsoleLogger() { Level = LogLevel.Warning };
 
 			//Subscribe to events
 			Client.OnReady += (sender, e) =>
@@ -56,6 +56,38 @@ namespace Cornifer
 
 		public static void Deinitialize() {
 			Client.Dispose();
+		}
+	}
+
+	class QuietConsoleLogger : ILogger
+	{
+		public LogLevel Level { get; set; }
+
+		public void Trace(string message, params object[] args)
+		{
+			if (Level > LogLevel.Trace) return;
+			Console.WriteLine("TRACE: " + message, args);
+		}
+
+		public void Info(string message, params object[] args)
+		{
+			if (Level > LogLevel.Info) return;
+			Console.WriteLine("INFO : " + message, args);
+		}
+
+		public void Warning(string message, params object[] args)
+		{
+			if (Level > LogLevel.Warning) return;
+			if (message.Contains("Tried to close a already closed pipe")) return;
+			Console.WriteLine("WARN : " + message, args);
+		}
+
+		public void Error(string message, params object[] args)
+		{
+			if (Level > LogLevel.Error) return;
+			if (message.Contains("Failed connection to discord-ipc-")) return;
+			if (message.Contains("Failed to connect for some reason")) return;
+			Console.WriteLine("ERR  : " + message, args);
 		}
 	}
 }
