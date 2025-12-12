@@ -283,7 +283,8 @@ namespace Cornifer
             if (acronym is null)
                 return null;
 
-            if (SlugcatRegionReplacements[""].TryGetValue(acronym, out string? defaultAcronym))
+            if (SlugcatRegionReplacements.TryGetValue("", out var defaultReplacements) 
+                && defaultReplacements.TryGetValue(acronym, out string? defaultAcronym))
                 return defaultAcronym;
 
             if (slugcat is not null
