@@ -1,4 +1,4 @@
-using Cornifer.Connections;
+﻿using Cornifer.Connections;
 using Cornifer.Helpers;
 using Cornifer.Input;
 using Cornifer.Json;
@@ -65,9 +65,11 @@ namespace Cornifer
         public static Layer BroadcastsLayer = new("broadcasts", "Broadcasts", true, false);
         public static Layer VistaPointsLayer = new("vistapoints", "Vista points", true, false);
         public static Layer TextsLayer = new("texts", "Texts", true, true);
+        public static Layer GridLayer = new GridLayer();
 
         static List<Layer> DefaultLayers = new()
         {
+            GridLayer,
             RoomsLayer,
             ConnectionsLayer,
             InRoomConnectionsLayer,
