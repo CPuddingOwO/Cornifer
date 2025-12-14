@@ -85,7 +85,7 @@ namespace Cornifer.Connections
                     }
                 }
             }
-            return room.WorldPosition + room.Size / 2f; // TODO: Coming Soon.
+            return room.WorldPosition + room.Size / 2f;
         }
 
         public Connection(Room source, Room.Connection connection)
