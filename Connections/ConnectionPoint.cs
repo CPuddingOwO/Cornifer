@@ -37,7 +37,7 @@ namespace Cornifer.Connections
         public ConnectionPoint(Connection connection)
         {
             Connection = connection;
-
+            Parent = connection.Source ?? connection.Destination;
             if (connection.IsInRoomShortcut)
                 NoShadow.OriginalValue = true;
         }

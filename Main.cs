@@ -1006,14 +1006,10 @@ namespace Cornifer
 
         public static void UpdateRegionLinks()
         {
+            List<Connection> existingConnections = GlobalConnections.AllConnections.ToList();
+
             GlobalConnections.RoomConnections.Clear();
             GlobalConnections.PointObjectLists.Clear();
-
-            List<Connection> existingConnections = new();
-            foreach (var conn in GlobalConnections.AllConnections)
-                existingConnections.Add(conn);
-
-            GlobalConnections.RoomConnections.Clear(); // Clear dictionary but keep connection objects reference for now
 
             for (int i = 0; i < Regions.Count; i++)
             {
@@ -1038,12 +1034,9 @@ namespace Cornifer
                                     conn = existingConnections.FirstOrDefault(c => c.Source.Name == room2.Name && c.Destination.Name == room1.Name);
                                 }
 
-                                if (conn is null)
-                                {
+                                if (conn is null) {
                                     conn = new(room1, room2);
-                                }
-                                else
-                                {
+                                } else {
                                     if (conn.Source.Name == room1.Name)
                                     {
                                         conn.Source = room1;
@@ -1060,6 +1053,17 @@ namespace Cornifer
                                     {
                                         conn.Points[0].Parent = conn.Source;
                                         conn.Points[^1].Parent = conn.Destination;
+                                    }
+
+                                    // If this is a straight connection (2 points) and it's default/unmodified,
+                                    // we might want to update the points to match the current gate exits,
+                                    // in case the user dragged the regions around or reloaded them.
+                                    // But if the user added custom points, we shouldn't touch them.
+                                    if (conn.Points.Count == 2)
+                                    {
+                                        // Update endpoints to match current room exit positions
+                                        conn.Points[0].ParentPosition = Connection.GetRegionExitPosition(conn.Source);
+                                        conn.Points[1].ParentPosition = Connection.GetRegionExitPosition(conn.Destination);
                                     }
                                 }
                                 GlobalConnections.RoomConnections[(room1.Name!, room2.Name!)] = conn;
@@ -1382,3 +1386,4 @@ namespace Cornifer
         }
     }
 }
+

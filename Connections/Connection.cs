@@ -65,8 +65,27 @@ namespace Cornifer.Connections
             Invalid = false;
             IsRegionLink = true;
 
-            Points.Add(new(this) { Parent = Source, ParentPosition = Source.Size / 2 });
-            Points.Add(new(this) { Parent = Destination, ParentPosition = Destination.Size / 2 });
+            Points.Add(new(this) { Parent = Source, ParentPosition = GetRegionExitPosition(Source) });
+            Points.Add(new(this) { Parent = Destination, ParentPosition = GetRegionExitPosition(Destination) });
+        }
+
+        public static Vector2 GetRegionExitPosition(Room room)
+        {
+            if (room.IsGate && room.Exits.Length >= 2)
+            {
+                // For a standard Gate, exits are usually [0] Left, [1] Right.
+                // Try to find the exit that is NOT connected to any room in the same region.
+                for (int i = 0; i < room.Connections.Length; i++)
+                {
+                    if (room.Connections[i] is null)
+                    {
+                        // This exit is not connected to a room in this region. 
+                        // It's likely the exit to the other region.
+                        if (i < room.Exits.Length) return room.Exits[i].ToVector2();
+                    }
+                }
+            }
+            return room.WorldPosition + room.Size / 2f; // TODO: Coming Soon.
         }
 
         public Connection(Room source, Room.Connection connection)
@@ -176,27 +195,67 @@ namespace Cornifer.Connections
 
         public JsonNode SaveJson()
         {
+            EnsurePointParents();
             return new JsonObject
             {
                 ["points"] = new JsonArray(Points.Select(p => p.SaveJson()).ToArray())
             }.SaveProperty(AllowWhiteToRedPixel);
         }
+        Room? GetExpectedParent(int index, int totalPoints)
+        {
+            if (IsInRoomShortcut)
+                return Source;
+
+            if (IsRegionLink)
+                return index == totalPoints - 1 ? Destination : Source;
+
+            return Source;
+        }
+
+        void EnsurePointParents()
+        {
+            for (int i = 0; i < Points.Count; i++)
+            {
+                Room? expected = GetExpectedParent(i, Points.Count);
+                if (expected is null)
+                    continue;
+
+                ConnectionPoint point = Points[i];
+                if (point.Parent == expected)
+                    continue;
+
+                Vector2 worldPos = point.WorldPosition;
+                point.Parent = expected;
+                point.WorldPosition = worldPos;
+            }
+        }
+        
 
         void LoadPointArray(JsonArray points)
         {
             Points.Clear();
-            foreach (JsonNode? pointNode in points)
+            
+            List<JsonNode> validNodes = new(points.Count);
+            foreach (JsonNode? node in points)
+                if (node is not null)
+                    validNodes.Add(node);
+            
+            for (int i = 0; i < validNodes.Count; i++)
             {
-                if (pointNode is null)
-                    continue;
-
+                JsonNode node = validNodes[i];
                 ConnectionPoint newPoint = new(this);
-                newPoint.LoadJson(pointNode);
+            
+                Room? parentRoom = GetExpectedParent(i, validNodes.Count);
+                if (parentRoom is not null)
+                    newPoint.Parent = parentRoom;
+            
+                newPoint.LoadJson(node);
                 Points.Add(newPoint);
 
-                if (IsInRoomShortcut)
-                    newPoint.Parent = Source;
+                
             }
+
+            EnsurePointParents();
         }
 
         public override string ToString()
