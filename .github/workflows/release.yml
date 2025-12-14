@@ -1,0 +1,47 @@
+﻿name: Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Install MGCB
+        run: dotnet tool install -g dotnet-mgcb
+        shell: pwsh
+
+      - name: Build
+        run: |
+          cd "${{ github.workspace }}"
+          dotnet build -c Release
+        shell: pwsh
+        
+      - name: Compress artifacts
+        run: |
+          if (Test-Path build.zip) { Remove-Item build.zip -Force }
+          Compress-Archive -Path "bin/Release/net6.0-windows/*" -DestinationPath build.zip
+        shell: pwsh
+
+      - name: Publish Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: build.zip
+          asset_name: Build.zip
+          asset_content_type: application/zip
