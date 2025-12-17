@@ -38,3 +38,8 @@ Switch slugcats after region load
 + displayname.txt
 
 Exclusive keybinds
+
+--- --- Optimize
+
+Memory in Multi-Region
+Room loop in Multi-Region
