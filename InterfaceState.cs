@@ -39,7 +39,14 @@ namespace Cornifer
         static List<Config> Configs = new();
         static InterfaceState()
         {
-            static void UpdateRoomTilemaps() => Main.Region?.MarkRoomTilemapsDirty();
+            static void UpdateRoomTilemaps() 
+            {
+                // Update all loaded regions, not just the current one
+                foreach (Region region in Main.Regions)
+                {
+                    region.MarkRoomTilemapsDirty();
+                }
+            }
 
             DrawTileWalls.OnChanged = UpdateRoomTilemaps;
             WaterTransparency.OnChanged = UpdateRoomTilemaps;
