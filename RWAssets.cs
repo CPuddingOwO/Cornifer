@@ -658,9 +658,7 @@ namespace Cornifer
             foreach (var (dir, mod) in EnumerateDirectories("world"))
             {
                 string id = System.IO.Path.GetFileName(dir)!.ToUpper();
-
-                if (!File.Exists(Path.Combine(dir, $"world_{id}.txt")))
-                    continue;
+                
 
                 string? properties = ResolveFile($"world/{id}/properties.txt");
                 if (properties is null)
