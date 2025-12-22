@@ -12,7 +12,7 @@ namespace Cornifer.MapObjects
     public class PlacedObject : SimpleIcon
     {
         public string Type = null!;
-		public static string[] technicalObjects = { "Filter", "ScavengerTreasury", "TerrainHandle", "WaterCycleTop", "WaterCycleBottom", "WaterCutoff", "AirPocket" };
+		public static string[] technicalObjects = { "Filter", "ScavengerTreasury", "TerrainHandle", "WaterCycleTop", "WaterCycleBottom", "WaterCutoff", "AirPocket", "LocalTerrain" };
 		public override string? Name => $"{Type}@{RoomPos.X:0},{RoomPos.Y:0}";
 		public List<SlugcatIcon>? AvailabilityIcons;
 		public HashSet<string> SlugcatAvailability = new();
@@ -28,6 +28,10 @@ namespace Cornifer.MapObjects
 		public Vector2 TerrainHandleLeftOffset;
 		public Vector2 TerrainHandleRightOffset;
 		public float TerrainHandleBackHeight;
+
+		public Vector2[] LocalTerrainMidpoints = Array.Empty<Vector2>();
+		public Vector2[] LocalTerrainSpline = Array.Empty<Vector2>();
+		public float LocalTerrainBottom;
 
 		public Rectangle AirPocket;
 		public int WaterCutoffLength;
@@ -49,6 +53,11 @@ namespace Cornifer.MapObjects
         {
             BorderSize.OriginalValue = 2;
         }
+
+		public static Vector2 ParseBezierSpline(string s) {
+			string[] array = s.Split("^");
+			return new Vector2(float.Parse(array[0], CultureInfo.InvariantCulture) / 20, float.Parse(array[1], CultureInfo.InvariantCulture) / 20);
+		}
 
         public static PlacedObject? Load(string data)
         {
@@ -82,163 +91,167 @@ namespace Cornifer.MapObjects
             if (obj is null)
                 return null;
 
-            if (objName.EndsWith("Token"))
-            {
-                string subname = subsplit[5];
-                obj.DebugDisplay = $"Token target: {subname}";
+			switch (objName) {
+				case "WarpPoint":
+					obj.TargetRegion = subsplit[4];
+					obj.TargetRoom = subsplit[5];
+					obj.IsRippleWarp = Boolean.Parse(subsplit[25]);
+					break;
+				case "SpinningTopSpot":
+					obj.TargetRegion = subsplit[3];
+					obj.TargetRoom = subsplit[4];
+					break;
+				case "TerrainHandle":
+					obj.TerrainHandleLeftOffset = new(float.Parse(subsplit[0], CultureInfo.InvariantCulture) / 20, float.Parse(subsplit[1], CultureInfo.InvariantCulture) / 20);
+					obj.TerrainHandleRightOffset = new(float.Parse(subsplit[2], CultureInfo.InvariantCulture) / 20, float.Parse(subsplit[3], CultureInfo.InvariantCulture) / 20);
+					obj.TerrainHandleBackHeight = float.Parse(subsplit[4], CultureInfo.InvariantCulture) / 20;
+					break;
+				case "LocalTerrain":
+					string[] midpoints = subsplit[4].Split("|");
+					obj.LocalTerrainBottom = float.Parse(subsplit[0], CultureInfo.InvariantCulture) / 20;
+					List<Vector2> splineMidpoints = new();
+					List<Vector2> splinePoints = new();
+					foreach (string text in midpoints) {
+						if (!string.IsNullOrWhiteSpace(text)) {
+							splineMidpoints.Add(ParseBezierSpline(text));
+						}
+					}
+					splinePoints.Add(Vector2.Zero);
+					splinePoints.Add(ParseBezierSpline(subsplit[2]));
+					splinePoints.Add(ParseBezierSpline(subsplit[1]));
+					splinePoints.Add(ParseBezierSpline(subsplit[3]));
+					obj.LocalTerrainMidpoints = splineMidpoints.ToArray();
+					obj.LocalTerrainSpline = splinePoints.ToArray();
+					break;
+				case "AirPocket":
+					float waterLevel = float.Parse(subsplit[5], NumberStyles.Any, CultureInfo.InvariantCulture) / 20;
+					int width = (int)Math.Round(float.Parse(subsplit[0], NumberStyles.Any, CultureInfo.InvariantCulture) / 20);
+					int height = (int)Math.Round((float.Parse(subsplit[1], NumberStyles.Any, CultureInfo.InvariantCulture) / 20) - waterLevel);
 
-                if (objName == "WhiteToken")
-                    obj.SlugcatAvailability = new() { "Spear" };
-                else if (objName == "DevToken")
-                    obj.RemoveByAvailability = false;
-                else
-                    obj.SlugcatAvailability = ParseSlugcats(subsplit[6]);
+					obj.AirPocket = new((int)Math.Round(obj.RoomPos.X), (int)Math.Ceiling(obj.RoomPos.Y + waterLevel), width, height);
+					break;
+				case "WaterCutoff":
+					obj.WaterCutoffLength = (int)Math.Round(float.Parse(subsplit[0], NumberStyles.Any, CultureInfo.InvariantCulture) / 20);
+					break;
+				case "ScavengerOutpost":
+					float x = float.Parse(subsplit[0], NumberStyles.Float, CultureInfo.InvariantCulture);
+					float y = float.Parse(subsplit[1], NumberStyles.Float, CultureInfo.InvariantCulture);
 
-                obj.Color.OriginalValue.Color.A = 150;
-                obj.Shade.OriginalValue = false;
+					Vector2 handlePos = new Vector2(x, y);
+					obj.RoomPos += handlePos / 20;
 
-                switch (objName)
-                {
-                    case "WhiteToken":
-                        obj.RenderLayer.OriginalValue = Main.BroadcastsLayer;
-                        break;
+					handlePos.Normalize();
+					obj.RoomPos += handlePos * 3.5f;
+					break;
+				case "Filter":
+					if (subsplit.Length >= 5) {
+						float j = float.Parse(subsplit[0], NumberStyles.Float, CultureInfo.InvariantCulture);
+						float k = float.Parse(subsplit[1], NumberStyles.Float, CultureInfo.InvariantCulture);
 
-                    case "GreenToken":
-                        Slugcat? slugcat = StaticData.Slugcats.FirstOrDefault(s => s.Name == subname || s.Id == subname);
+						obj.HandlePos = new(j, k);
+						obj.SlugcatAvailability = ParseSlugcats(subsplit[4]);
+						
+					}
+					break;
+				default:
+					if (objName.EndsWith("Token")) {
+						string subname = subsplit[5];
+						obj.DebugDisplay = $"Token target: {subname}";
 
-                        if (slugcat is not null)
-                        {
-                            obj.Children.Add(new SlugcatIcon("GreenTokenSlugcat", slugcat, false)
-                            {
-                                ParentPosition = new(0, 8),
-                                Parent = obj,
-                                ForceSlugcatIcon = true,
-                                LineColor = Microsoft.Xna.Framework.Color.Lime
-                            });
-                        }
-                        
-                        break;
+						if (objName == "WhiteToken")
+							obj.SlugcatAvailability = new() { "Spear" };
+						else if (objName == "DevToken")
+							obj.RemoveByAvailability = false;
+						else
+							obj.SlugcatAvailability = ParseSlugcats(subsplit[6]);
 
-                    case "BlueToken":
-                        PlacedObject? subObject = Load(subname, obj.Size / 2);
-                        if (subObject is not null)
-                        {
-                            subObject.ParentPosition = new(0, 15);
-                            obj.Children.Add(subObject);
+						obj.Color.OriginalValue.Color.A = 150;
+						obj.Shade.OriginalValue = false;
 
-                            if (StaticData.TiedSandboxIDs.TryGetValue(subname, out string[]? tied))
-                            {
-								List<PlacedObject> objects = new() { subObject };
+						switch (objName) {
+							case "WhiteToken":
+								obj.RenderLayer.OriginalValue = Main.BroadcastsLayer;
+								break;
 
-								foreach (string to in tied)
-                                {
-                                    PlacedObject? tiedObj = Load(to, obj.Size / 2);
-                                    if (tiedObj is null)
-                                        continue;
+							case "GreenToken":
+								Slugcat? slugcat = StaticData.Slugcats.FirstOrDefault(s => s.Name == subname || s.Id == subname);
 
-                                    obj.Children.Add(tiedObj);
-                                    objects.Add(tiedObj);
-                                }
-								if (objects.Count > 1) {
-									float angle = 0;
-									float ad = MathF.PI * 2 / objects.Count;
+								if (slugcat is not null) {
+									obj.Children.Add(new SlugcatIcon("GreenTokenSlugcat", slugcat, false) {
+										ParentPosition = new(0, 8),
+										Parent = obj,
+										ForceSlugcatIcon = true,
+										LineColor = Microsoft.Xna.Framework.Color.Lime
+									});
+								}
 
-									foreach (PlacedObject o in objects) {
-										o.Offset = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * 20;
-										angle += ad;
+								break;
+
+							case "BlueToken":
+								PlacedObject? subObject = Load(subname, obj.Size / 2);
+								if (subObject is not null) {
+									subObject.ParentPosition = new(0, 15);
+									obj.Children.Add(subObject);
+
+									if (StaticData.TiedSandboxIDs.TryGetValue(subname, out string[]? tied)) {
+										List<PlacedObject> objects = new() { subObject };
+
+										foreach (string to in tied) {
+											PlacedObject? tiedObj = Load(to, obj.Size / 2);
+											if (tiedObj is null)
+												continue;
+
+											obj.Children.Add(tiedObj);
+											objects.Add(tiedObj);
+										}
+										if (objects.Count > 1) {
+											float angle = 0;
+											float ad = MathF.PI * 2 / objects.Count;
+
+											foreach (PlacedObject o in objects) {
+												o.Offset = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * 20;
+												angle += ad;
+											}
+										}
 									}
 								}
+								break;
+
+							case "RedToken":
+								MapText safariText = new("SafariText", Main.DefaultSmallMapFont, "Safari");
+								safariText.Color.Value = new(null, new(255, 0, 0));
+								safariText.ParentPosition = new(-30, -45);
+								obj.Children.Add(safariText);
+								break;
+
+							case "GoldToken":
+								MapText arenaText = new("ArenaText", Main.DefaultSmallMapFont, "Arena");
+								arenaText.Color.Value = new(null, new(255, 153, 13));
+								arenaText.ParentPosition = new(-30, -45);
+								obj.Children.Add(arenaText);
+								break;
+						}
+					}
+					else if (split[0].Contains("DataPearl")) {
+						if (subsplit.TryGet(4, out string type)) {
+							type = FixDataPearlType(type);
+							obj.DebugDisplay = $"Pearl id: {type}";
+
+							obj.Color.OriginalValue.Color = StaticData.GetPearlColor(type);
+
+							if (type != "Misc" && type != "BroadcastMisc") {
+								obj.Children.Add(new MapText("PearlText", Main.DefaultSmallMapFont, $"[c:{obj.Color.Value.GetKeyOrColorString()}]Colored[/c] pearl"));
+								if (SpriteAtlases.Sprites.TryGetValue("ScholarA", out AtlasSprite? sprite))
+									obj.Children.Add(new SimpleIcon("PearlIcon", sprite) {
+										Shade = { OriginalValue = true }
+									});
 							}
-                        }
-                        break;
+						}
+						obj.Color.OriginalValue.Color.A = 165;
+					}
+					break;
 
-					case "RedToken":
-						MapText safariText = new("SafariText", Main.DefaultSmallMapFont, "Safari");
-						safariText.Color.Value = new(null, new(255, 153, 13));
-						safariText.ParentPosition = new(-30, -45);
-						obj.Children.Add(safariText);
-						break;
-
-					case "GoldToken":
-						MapText arenaText = new("ArenaText", Main.DefaultSmallMapFont, "Arena");
-						arenaText.Color.Value = new(null, new(255, 0, 0));
-						arenaText.ParentPosition = new(-30, -45);
-						obj.Children.Add(arenaText);
-						break;
-				}
 			}
-
-			if (objName == "WarpPoint")
-			{
-				obj.TargetRegion = subsplit[4];
-				obj.TargetRoom = subsplit[5];
-				obj.IsRippleWarp = Boolean.Parse(subsplit[25]);
-			} else if (objName == "SpinningTopSpot")
-			{
-				obj.TargetRegion = subsplit[3];
-				obj.TargetRoom = subsplit[4];
-			}
-
-			if (objName == "TerrainHandle") {
-				obj.TerrainHandleLeftOffset = new(float.Parse(subsplit[0], CultureInfo.InvariantCulture) / 20, float.Parse(subsplit[1], CultureInfo.InvariantCulture) / 20);
-				obj.TerrainHandleRightOffset = new(float.Parse(subsplit[2], CultureInfo.InvariantCulture) / 20, float.Parse(subsplit[3], CultureInfo.InvariantCulture) / 20);
-				obj.TerrainHandleBackHeight = float.Parse(subsplit[4], CultureInfo.InvariantCulture) / 20;
-			}
-
-			if (objName == "AirPocket") {
-				float waterLevel = float.Parse(subsplit[5], NumberStyles.Any, CultureInfo.InvariantCulture) / 20;
-				int width = (int)Math.Round(float.Parse(subsplit[0], NumberStyles.Any, CultureInfo.InvariantCulture) / 20);
-				int height = (int)Math.Round((float.Parse(subsplit[1], NumberStyles.Any, CultureInfo.InvariantCulture) / 20) - waterLevel);
-
-				obj.AirPocket = new((int)Math.Round(obj.RoomPos.X), (int)Math.Ceiling(obj.RoomPos.Y + waterLevel), width, height);
-			}
-
-			if (objName == "WaterCutoff") {
-				obj.WaterCutoffLength = (int)Math.Round(float.Parse(subsplit[0], NumberStyles.Any, CultureInfo.InvariantCulture) / 20);
-			}
-
-            if (objName == "Filter" && subsplit.Length >= 5)
-            {
-                float x = float.Parse(subsplit[0], NumberStyles.Float, CultureInfo.InvariantCulture);
-                float y = float.Parse(subsplit[1], NumberStyles.Float, CultureInfo.InvariantCulture);
-
-                obj.HandlePos = new(x, y);
-                obj.SlugcatAvailability = ParseSlugcats(subsplit[4]);
-            }
-
-            if (objName == "ScavengerOutpost")
-            {
-                float x = float.Parse(subsplit[0], NumberStyles.Float, CultureInfo.InvariantCulture);
-                float y = float.Parse(subsplit[1], NumberStyles.Float, CultureInfo.InvariantCulture);
-
-                Vector2 handlePos = new Vector2(x, y);
-                obj.RoomPos += handlePos / 20;
-
-                handlePos.Normalize();
-                obj.RoomPos += handlePos * 3.5f;
-            }
-
-            if (split[0].Contains("DataPearl"))
-            {
-                if (subsplit.TryGet(4, out string type))
-                {
-                    type = FixDataPearlType(type);
-                    obj.DebugDisplay = $"Pearl id: {type}";
-
-                    obj.Color.OriginalValue.Color = StaticData.GetPearlColor(type);
-                    
-                    if (type != "Misc" && type != "BroadcastMisc")
-                    {
-                        obj.Children.Add(new MapText("PearlText", Main.DefaultSmallMapFont, $"[c:{obj.Color.Value.GetKeyOrColorString()}]Colored[/c] pearl"));
-                        if (SpriteAtlases.Sprites.TryGetValue("ScholarA", out AtlasSprite? sprite))
-                            obj.Children.Add(new SimpleIcon("PearlIcon", sprite)
-                            {
-                                Shade = { OriginalValue = true }
-                            });
-                    }
-                }
-                obj.Color.OriginalValue.Color.A = 165;
-            }
 
             if (obj.RemoveByAvailability && Main.SelectedSlugcat is not null && obj.SlugcatAvailability.Count > 0 && !obj.SlugcatAvailability.Contains(Main.SelectedSlugcat.Id))
                 return null;
