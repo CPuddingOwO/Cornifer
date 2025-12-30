@@ -6,9 +6,11 @@ on:
       ref:
         required: true
         type: string
+  workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 permissions:
   contents: read
