@@ -88,6 +88,10 @@ jobs:
           tag_name: nightly
           target_commitish: ${{ needs.prepare.outputs.sha }}
           name: Nightly Build ${{ needs.prepare.outputs.sha }}
-          body: "Automatic nightly build for commit ${{ needs.prepare.outputs.sha }}"
+          generate_release_notes: true
+          body: |
+            > [!NOTE]
+            > This is an automated nightly build. For stable versions, please check the regular releases.
+            > Commit: ${{ needs.prepare.outputs.sha }}
           prerelease: true
           files: "*.zip"

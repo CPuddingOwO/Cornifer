@@ -1,0 +1,17 @@
+﻿changelog:
+  exclude:
+    labels:
+      - ignore
+    authors:
+      - github-actions[bot]
+  categories:
+    - title: "🚀 New Features"
+      labels:
+        - enhancement
+        - feature
+    - title: "🐛 Bug Fixes"
+      labels:
+        - bug
+        - fix
+    - title: "Contributors"
+      collapse_after: 3

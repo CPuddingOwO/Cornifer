@@ -85,5 +85,8 @@ jobs:
           tag_name: ${{ inputs.tag }}
           name: ${{ inputs.title || inputs.tag }}
           target_commitish: ${{ needs.prepare.outputs.sha }}
+          generate_release_notes: true
+          body_path: CHANGELOG.md
+          append_body: true
           prerelease: false
           files: "*.zip"
