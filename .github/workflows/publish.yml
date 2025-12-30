@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       ref:
-        description: 'Commit SHA or Branch (e.g. main)'
+        description: 'Commit SHA or Branch (e.g. master)'
         required: true
-        default: 'main'
+        default: 'master'
       tag:
         description: 'Release tag (e.g. v1.2.3)'
         required: true
