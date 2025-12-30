@@ -1,7 +1,7 @@
 # Cornifer
 <img width="400" src="./Icon.png">
 
-A Rain World mapping tool.
+A Rain World mapping tool ( Multi-Region Ver. ).
 
 ### Usage
 
