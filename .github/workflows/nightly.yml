@@ -24,8 +24,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # 定时任务通常取 main HEAD
-          SHA=$(gh api repos/${{ github.repository }}/branches/main --jq '.commit.sha')
+          SHA=$(gh api repos/${{ github.repository }}/branches/master --jq '.commit.sha')
           echo "sha=$SHA" >> $GITHUB_OUTPUT
 
       - name: Resolve existing Build run
