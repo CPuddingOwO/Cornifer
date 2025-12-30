@@ -1,37 +1,63 @@
-name: .NET
+name: Build
 
 on:
   workflow_dispatch:
-    
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
   push:
-    branches: [ "master" ]
+    branches: [ "master", "main" ]
   pull_request:
     branches: [ "master" ]
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   build:
-
+    name: Build (windows-x64)
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 6.0.x
-        
-    - name: Install MGCB
-      run: dotnet tool install -g dotnet-mgcb
-      shell: pwsh
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
 
-    - name: Build
-      run: |
-        cd "${{ github.workspace }}"
-        dotnet build -c Release
-      shell: pwsh
-      
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: Build
-        path: bin/Release/net6.0-windows
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.0.x
+          
+      - name: Install MGCB
+        run: dotnet tool install -g dotnet-mgcb
+        shell: pwsh
+
+      - name: Build Project
+        run: dotnet build -c Release
+        shell: pwsh
+
+      - name: Prepare Distribution Folder
+        shell: bash
+        run: |
+          mkdir -p dist/windows-x64
+          cp -r bin/Release/net6.0-windows/* dist/windows-x64/
+          
+          echo "commit: $GITHUB_SHA" > dist/windows-x64/commit.txt
+          echo "target: windows-x64" > dist/windows-x64/target.txt
+
+      - name: Archive build (ZIP)
+        shell: bash
+        run: |
+          cd dist
+          7z a ../windows-x64.zip windows-x64/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ github.sha }}-windows-x64
+          path: windows-x64.zip
+          retention-days: 14
