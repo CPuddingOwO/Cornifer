@@ -1,0 +1,93 @@
+name: Nightly
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  prepare:
+    name: Resolve Build Artifact
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.sha.outputs.sha }}
+      build_run_id: ${{ steps.resolve.outputs.build_run_id }}
+      need_build: ${{ steps.resolve.outputs.need_build }}
+
+    steps:
+      - name: Resolve SHA
+        id: sha
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 定时任务通常取 main HEAD
+          SHA=$(gh api repos/${{ github.repository }}/branches/main --jq '.commit.sha')
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+
+      - name: Resolve existing Build run
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          TARGET_SHA: ${{ steps.sha.outputs.sha }}
+        run: |
+          RUN_ID=$(gh run list --repo $REPO \
+            --workflow build.yml \
+            --commit $TARGET_SHA \
+            --status success \
+            --limit 1 \
+            --json databaseId --jq '.[0].databaseId')
+
+          if [ -z "$RUN_ID" ]; then
+            echo "need_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "need_build=false" >> $GITHUB_OUTPUT
+            echo "build_run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    name: Trigger Build
+    needs: prepare
+    if: needs.prepare.outputs.need_build == 'true'
+    uses: ./.github/workflows/build.yml
+    with:
+      ref: ${{ needs.prepare.outputs.sha }}
+
+  nightly:
+    name: Nightly Release
+    needs: [prepare, build]
+    # 只要 prepare 成功且 build 没有失败（成功或被跳过）就执行
+    if: always() && needs.prepare.result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          # 如果 build 任务被跳过，说明有现成的，去那个 run_id 下；否则就在当前 run 下载
+          run-id: ${{ needs.build.result == 'skipped' && needs.prepare.outputs.build_run_id || github.run_id }}
+          pattern: "build-${{ needs.prepare.outputs.sha }}-*"
+          merge-multiple: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Manage Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete nightly --repo ${{ github.repository }} --cleanup-tag -y || true
+          
+          # 简单的文件整理（可选，取决于你下载后的目录结构）
+          ls -R
+
+      - name: Create Nightly Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: nightly
+          target_commitish: ${{ needs.prepare.outputs.sha }}
+          name: Nightly Build ${{ needs.prepare.outputs.sha }}
+          body: "Automatic nightly build for commit ${{ needs.prepare.outputs.sha }}"
+          prerelease: true
+          files: "*.zip"

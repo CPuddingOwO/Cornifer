@@ -1,0 +1,71 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        required: true
+        type: string
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows-x64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Install MGCB
+        run: dotnet tool install -g dotnet-mgcb
+        shell: pwsh
+
+      - name: Dotnet Build
+        run: dotnet build -c Release
+        shell: pwsh
+      # --- .NET 必要步骤结束 ---
+
+      - name: Prepare Distribution
+        shell: bash
+        run: |
+          mkdir -p dist/${{ matrix.target }}
+          
+          # 1. 复制编译生成的文件到 dist 目录 
+          cp -r bin/Release/net6.0-windows/* dist/${{ matrix.target }}/
+          
+          # 2. 写入元数据文件
+          echo "commit: ${{ inputs.ref || github.sha }}" > dist/${{ matrix.target }}/commit.txt
+          echo "target: ${{ matrix.target }}" > dist/${{ matrix.target }}/target.txt
+
+      - name: Archive build (ZIP)
+        shell: bash
+        run: |
+          cd dist
+          7z a ../${{ matrix.target }}.zip ${{ matrix.target }}/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ inputs.ref || github.sha }}-${{ matrix.target }}
+          path: ${{ matrix.target }}.zip
+          retention-days: 14

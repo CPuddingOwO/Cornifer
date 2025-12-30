@@ -1,0 +1,89 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Commit SHA or Branch (e.g. main)'
+        required: true
+        default: 'main'
+      tag:
+        description: 'Release tag (e.g. v1.2.3)'
+        required: true
+      title:
+        description: 'Release title'
+        required: false
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  prepare:
+    name: Resolve Build Artifact
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.sha.outputs.sha }}
+      build_run_id: ${{ steps.resolve.outputs.build_run_id }}
+      need_build: ${{ steps.resolve.outputs.need_build }}
+
+    steps:
+      - name: Resolve SHA
+        id: sha
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 解析用户输入的 ref 得到确切的 SHA
+          SHA=$(gh api repos/${{ github.repository }}/commits/${{ github.event.inputs.ref }} --jq '.sha')
+          echo "sha=$SHA" >> $GITHUB_OUTPUT
+
+      - name: Check for existing Build
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_SHA: ${{ steps.sha.outputs.sha }}
+        run: |
+          RUN_ID=$(gh run list --repo ${{ github.repository }} \
+            --workflow build.yml \
+            --commit $TARGET_SHA \
+            --status success \
+            --limit 1 \
+            --json databaseId --jq '.[0].databaseId')
+
+          if [ -z "$RUN_ID" ]; then
+            echo "need_build=true" >> $GITHUB_OUTPUT
+          else
+            echo "need_build=false" >> $GITHUB_OUTPUT
+            echo "build_run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    name: Trigger Build
+    needs: prepare
+    if: needs.prepare.outputs.need_build == 'true'
+    uses: ./.github/workflows/build.yml
+    with:
+      ref: ${{ needs.prepare.outputs.sha }}
+
+  release:
+    name: Publish Release
+    needs: [prepare, build]
+    if: always() && needs.prepare.result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: ${{ needs.build.result == 'skipped' && needs.prepare.outputs.build_run_id || github.run_id }}
+          pattern: "build-${{ needs.prepare.outputs.sha }}-*"
+          merge-multiple: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: ${{ inputs.title || inputs.tag }}
+          target_commitish: ${{ needs.prepare.outputs.sha }}
+          prerelease: false
+          files: "*.zip"
