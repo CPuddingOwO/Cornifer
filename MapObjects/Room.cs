@@ -1,9 +1,11 @@
-﻿using Cornifer.Json;
+﻿using Cornifer.Connections;
+using Cornifer.Json;
 using Cornifer.Renderers;
 using Cornifer.Structures;
 using Cornifer.UI.Elements;
 using Cornifer.UI.Helpers;
 using Cornifer.UI.Pages;
+using Cornifer.UI.Structures;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -37,6 +39,7 @@ namespace Cornifer.MapObjects
 
 		public Vector2? WarpPos;
 		public string? WarpTarget;
+		public string? WarpTargetRoom;
 		public bool RippleWarp;
 		public PlacedObject? SpinningTopObj;
 
@@ -138,6 +141,16 @@ namespace Cornifer.MapObjects
 
 		private bool IsValidTilePos(Point testTilePos) {
 			return testTilePos.X >= 0 && testTilePos.Y >= 0 && testTilePos.X < TileSize.X && testTilePos.Y < TileSize.Y;
+		}
+
+		public Point GetShortcutExitDirection(Point shortcut) {
+			for (int i = 0; i < 4; i++) {
+				Point testTilePos = shortcut + StaticData.Directions[i];
+				if (!IsValidTilePos(testTilePos)) continue;
+				Tile tile = Tiles[testTilePos.X, testTilePos.Y];
+				if (tile.Terrain != Tile.TerrainType.Solid) return StaticData.Directions[i];
+			}
+			return new(0, 0);
 		}
 
         public Room()
@@ -581,6 +594,7 @@ namespace Cornifer.MapObjects
 										isWarpRoom = true;
 										WarpPos = new(obj.RoomPos.X, TileSize.Y - obj.RoomPos.Y);
 										WarpTarget = obj.TargetRegion;
+										WarpTargetRoom = obj.TargetRoom;
 										RippleWarp = obj.IsRippleWarp ?? false;
 
 										if (obj.Type == "SpinningTopSpot") objects.Add(obj);
@@ -660,6 +674,7 @@ namespace Cornifer.MapObjects
                         {
 							if (isWarpRoom && obj.Type == "SpinningTopSpot") {
 								SpinningTopObj = obj;
+								SpinningTopObj.BorderSize.OriginalValue = 0;
 							}
 							else 
 							{
@@ -708,19 +723,25 @@ namespace Cornifer.MapObjects
                 {
                     ParentPosAlign = align,
                 });
-                if (SpriteAtlases.Sprites.TryGetValue("ChieftainA", out var tollIcon))
+                if (SpriteAtlases.Sprites.TryGetValue("Object_ScavengerOutpost", out var tollIcon))
                     Children.Add(new SimpleIcon("TollIcon", tollIcon)
                     {
                         ParentPosAlign = align,
                     });
-            }
+				if (SpriteAtlases.Sprites.TryGetValue("ChieftainA", out var tollTextIcon))
+					Children.Add(new SimpleIcon("TollTextIcon", tollTextIcon) {
+						ParentPosAlign = align,
+					});
+			}
 
             if (IsScavengerTrader)
             {
                 Children.Add(new MapText("TraderText", Main.DefaultSmallMapFont, "Scavenger merchant"));
-                if (SpriteAtlases.Sprites.TryGetValue("ChieftainA", out var tollIcon))
-                    Children.Add(new SimpleIcon("TraderIcon", tollIcon));
-            }
+                if (SpriteAtlases.Sprites.TryGetValue("Object_ScavengerOutpost", out var traderIcon))
+                    Children.Add(new SimpleIcon("TraderIcon", traderIcon));
+				if (SpriteAtlases.Sprites.TryGetValue("ChieftainA", out var traderTextIcon))
+					Children.Add(new SimpleIcon("TraderTextIcon", traderTextIcon));
+			}
 
             if (IsScavengerTreasury)
             {
@@ -730,12 +751,16 @@ namespace Cornifer.MapObjects
                 {
                     ParentPosAlign = align,
                 });
-                if (SpriteAtlases.Sprites.TryGetValue("ChieftainA", out var tollIcon))
-                    Children.Add(new SimpleIcon("TreasuryIcon", tollIcon)
+                if (SpriteAtlases.Sprites.TryGetValue("Object_ScavengerOutpost", out var treasuryIcon))
+                    Children.Add(new SimpleIcon("TreasuryIcon", treasuryIcon)
                     {
                         ParentPosAlign = align,
                     });
-            }
+				if (SpriteAtlases.Sprites.TryGetValue("ChieftainA", out var treasuryTextIcon))
+					Children.Add(new SimpleIcon("TreasuryTextIcon", treasuryTextIcon) {
+						ParentPosAlign = align,
+					});
+			}
 
 			if (isWarpRoom) 
 			{
@@ -752,7 +777,12 @@ namespace Cornifer.MapObjects
 						};
 					}
 
-					ColorRef warpColor = ColorDatabase.GetRegionColor(WarpTarget, null);
+					string? subregion = Region.GetRoomSubregion(WarpTargetRoom);
+					string? fromRegion;
+					if (subregion is not null) fromRegion = subregion;
+					else fromRegion = RWAssets.GetRegionDisplayName(WarpTarget, Main.SelectedSlugcat);
+
+					ColorRef warpColor = ColorDatabase.GetRegionColor(WarpTarget, subregion);
 
 					if ((WarpTarget == "WAUA" || WarpTarget == "WRSA" || RippleWarp) && !isDESERT6 && SpriteAtlases.Sprites.TryGetValue("Object_RippleWarpPoint", out var rippleWarpIcon))
 						Children.Add(new SimpleIcon("RippleWarpPointIcon", rippleWarpIcon) {
@@ -763,7 +793,7 @@ namespace Cornifer.MapObjects
 							ParentPosAlign = align
 						});
 
-					if (!isDESERT6) Children.Add(new MapText("WarpTargetText", Main.DefaultSmallMapFont, $"To [c:{warpColor.GetKeyOrColorString()}]{RWAssets.GetRegionDisplayName(WarpTarget, null)}[/c]") {
+					if (!isDESERT6) Children.Add(new MapText("WarpTargetText", Main.DefaultBigMapFont, $"To [c:{warpColor.GetKeyOrColorString()}]{fromRegion}[/c]") {
 						ParentPosAlign = align
 					});
 				}
@@ -771,12 +801,33 @@ namespace Cornifer.MapObjects
 				if (SpinningTopObj is not null) Children.Add(SpinningTopObj); // so the icon renders overtop its warp point when applicable
 			}
 
-			if (Name is not null && StaticData.ValidWarpTargets.TryGetValue(Name, out var warpTarget) && SpriteAtlases.Sprites.TryGetValue("Object_EchoWarpPoint", out var echoWarpIcon)) {
-				string? fromRegion = RWAssets.GetRegionDisplayName(warpTarget, null);
-				ColorRef warpColor = ColorDatabase.GetRegionColor(warpTarget, null);
+			if (Name is not null && Region.OneWayWarps.TryGetValue(Name, out var warpTarget) && SpriteAtlases.Sprites.TryGetValue("Object_EchoWarpPoint", out var echoWarpIcon)) {
+				string[] split = warpTarget.Split(":");
+				string? fromRegion;
+				ColorRef warpColor;
 
-				Children.Add(new SimpleIcon("WarpPointIcon", echoWarpIcon));
-				Children.Add(new MapText("WarpTargetText", Main.DefaultSmallMapFont, $"From [c:{warpColor.GetKeyOrColorString()}]{fromRegion}[/c]"));
+				if (split.Length > 2) {
+					fromRegion = split[2];
+					warpColor = ColorDatabase.GetRegionColor(split[0], split[2]);
+				}
+				else {
+					fromRegion = RWAssets.GetRegionDisplayName(split[0], null);
+					warpColor = ColorDatabase.GetRegionColor(split[0], null);
+				}
+
+				Vector2 align = new(.5f);
+
+				if (split[1] != "") {
+					string[] subsplit = split[1].Split("~");
+					align = new Vector2(float.Parse(subsplit[0], CultureInfo.InvariantCulture) / 20, TileSize.Y - (float.Parse(subsplit[1], CultureInfo.InvariantCulture) / 20)) / TileSize.ToVector2(); // Not sure why it's vertically flipped...
+				}
+
+				Children.Add(new SimpleIcon("WarpPointIcon", echoWarpIcon) {
+					ParentPosAlign = align
+				});
+				Children.Add(new MapText("WarpTargetText", Main.DefaultBigMapFont, $"From [c:{warpColor.GetKeyOrColorString()}]{fromRegion}[/c]") {
+					ParentPosAlign = align
+				});
 			}
 
 			if (GateData is not null && IsGate) {

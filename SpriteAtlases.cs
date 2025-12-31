@@ -153,7 +153,7 @@ namespace Cornifer
         {
             { "KarmaFlower",      (new(110,72,   7,  7), new(255, 255, 255, 0.65f)) },
             { "SeedCob",          (new(40, 0,   35, 38), new(255, 255, 255, 255)) },
-            { "GhostSpot",        (new(0,  0,   38, 48), new(255, 255, 255, 255)) },
+            { "GhostSpot",        (new(0,  0,   23, 30), new(255, 255, 255, 255)) },
             { "BlueToken",        (new(77, 84,  13, 13), new(255, 255, 255, 0.75f)) },
             { "GoldToken",        (new(92, 84,  13, 13), new(255, 255, 255, 0.75f)) },
             { "RedToken",         (new(77, 69,  13, 13), new(255, 255, 255, 0.75f)) },
@@ -167,12 +167,14 @@ namespace Cornifer
             { "MoonCloak",        (new(1,  49,  21, 25), new(255, 255, 255, 255)) },
 			{ "AncientShelterMarker", (new(91, 45,  21, 22), new(255, 255, 255, 255)) },
 
-			{ "SpinningTopSpot",  (new(0,  0,   38, 48), new(255, 255, 255, 255)) },
+			{ "SpinningTopSpot",  (new(0,  0,   23, 30), new(255, 255, 255, 255)) },
 			{ "RippleWarpPoint",  (new(24, 60,  22, 24), new(0.373f, 0.11f, 0.831f, 0.75f)) },
 			{ "WarpPoint",		  (new(48, 60,  24, 25), new(0.373f, 0.11f, 0.831f, 0.75f)) },
 			{ "EchoWarpPoint",    (new(48, 60,  24, 25), new(1f, 0.73f, 0.368f, 0.75f)) },
 			{ "WeaverSpot",		  (new(48, 86,  28, 34), new(255, 255, 255, 255)) },
 			{ "RippleSpawnEgg",   (new(23, 85,  16, 16), new(0.404f, 0.353f, 0.984f, 0.75f)) },
+
+			{ "PearlPuter",		  (new(78, 99,	43, 22), new(255, 255, 255, 255)) }
 		};
 
         static readonly Dictionary<string, (Rectangle Frame, Color Color)> MiscSpriteFrames = new()
@@ -268,7 +270,11 @@ namespace Cornifer
                 name = "Slugcat_" + slugcat;
                 frame = new(i * 20, 26, 20, 19);
                 Sprites[name] = new(name, Content.SlugcatIcons, frame, Color.White, false);
-            }
+
+				name = "SlugcatCustom_" + slugcat;
+				frame = new(i * 24, 45, 24, 24);
+				Sprites[name] = new(name, Content.SlugcatIcons, frame, Color.White, false);
+			}
         }
 
         public static AtlasSprite? GetSpriteOrNull(string name)

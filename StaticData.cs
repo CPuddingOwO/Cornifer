@@ -48,12 +48,53 @@ namespace Cornifer
 		public static readonly HashSet<string> VanillaRegions = new() { "CC", "DS", "HI", "GW", "SI", "SU", "SH", "SL", "LF", "UW", "SB", "SS" };
 
         // TODO: equivalences.txt
-        public static Dictionary<string, List<string>> RegionEquivalences = new();
+        public static readonly Dictionary<string, List<string>> RegionEquivalences = new()
+        {
+            ["LM"] = new() { "SL" },
+            ["RM"] = new() { "SS" },
+            ["UG"] = new() { "DS" },
+            ["CL"] = new() { "SH" },
+            ["MS"] = new() { "DM" },
+            ["SL"] = new() { "LM" },
+            ["SS"] = new() { "RM" },
+            ["DS"] = new() { "UG" },
+            ["SH"] = new() { "CL" },
+            ["DM"] = new() { "MS" },
+        };
 
         // Slugcat -> { DefaultRegion -> StoryRegion }
         // Saint -> { DS -> UG }
         // TODO: equivalences.txt Region.GetProperRegionAcronym
-        public static Dictionary<string, Dictionary<string, string>> SlugcatRegionReplacements = new();
+        public static Dictionary<string, Dictionary<string, string>> SlugcatRegionReplacements = new()
+        {
+            [""] = new()
+            {
+                ["UX"] = "UW",
+                ["SX"] = "SS"
+            },
+
+            ["Spear"] = new()
+            {
+                ["SL"] = "LM"
+            },
+
+            ["Artificer"] = new()
+            {
+                ["SL"] = "LM"
+            },
+
+            ["Saint"] = new()
+            {
+                ["DS"] = "UG",
+                ["SS"] = "RM",
+                ["SH"] = "CL",
+            },
+
+            ["Rivulet"] = new()
+            {
+                ["SS"] = "RM",
+            }
+        };
 
         public static Dictionary<string, List<string>> SlugcatRegionAvailability = new()
         {
@@ -80,30 +121,7 @@ namespace Cornifer
 		public static readonly Point[] Directions = new Point[] { new (0, -1), new (1, 0), new (0, 1), new (-1, 0) };
 
 		public static Dictionary<string, string> GateSymbols = new();
-
-		public static readonly Dictionary<string, string> ValidWarpTargets = new() {
-			["WSKB_C17"] = "CC",
-			["WRFA_SK04"] = "LF",
-			["WSKA_D02"] = "SH",
-			["WARA_P05"] = "WARB",
-			["WARA_E08"] = "WARC",
-			["WSSR_CRAMPED"] = "WARD",
-			["WSKC_A03"] = "WARE",
-			["SB_D07"] = "WAUA",
-			["WVWB_B05"] = "WBLA",
-			["WTDA_B12"] = "WARF",
-			["WORA_DIAL"] = "WORA",
-			["WARA_P08"] = "WPTA",
-			["WARE_I01X"] = "WRFB",
-			["WRFB_A11"] = "WRFA",
-			["WARA_P17"] = "WRSA",
-			["WPTA_B10"] = "WSKC",
-			["WARD_R15"] = "WVWB",
-			["WBLA_C01"] = "WTDA",
-			["WARC_E03"] = "WVWA",
-			["WRFB_D09"] = "WTDB",
-		};
-
+		
         private static void LoadEquivalences()
         {
             string path = Path.Combine(Main.MainDir, "Assets/equivalences.txt");
@@ -283,8 +301,7 @@ namespace Cornifer
             if (acronym is null)
                 return null;
 
-            if (SlugcatRegionReplacements.TryGetValue("", out var defaultReplacements) 
-                && defaultReplacements.TryGetValue(acronym, out string? defaultAcronym))
+            if (SlugcatRegionReplacements[""].TryGetValue(acronym, out string? defaultAcronym))
                 return defaultAcronym;
 
             if (slugcat is not null
