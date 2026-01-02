@@ -1,5 +1,14 @@
 # Cornifer
-<img width="400" src="./Icon.png">
+
+---
+
+> # SUGGESTION
+> This version is strongly discouraged; we recommend using [enchanted-sword/cornifer](https://github.com/enchanted-sword/cornifer).  
+> My maintenance skills are poor, and I'm worried that your project files and data might be lost.  
+> Using the [enchanted-sword/cornifer](https://github.com/enchanted-sword/cornifer) branch is probably the best option.
+---
+
+<img width="400" src="./Icon.png" alt="Icon">
 
 A Rain World mapping tool ( Multi-Region Ver. ).
 
