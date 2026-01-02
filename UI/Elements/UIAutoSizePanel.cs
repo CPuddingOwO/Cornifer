@@ -1,4 +1,4 @@
-﻿using Cornifer.UI.Helpers;
+using Cornifer.UI.Helpers;
 using Cornifer.UI.Structures;
 using System;
 using System.Collections.Generic;
@@ -40,7 +40,7 @@ namespace Cornifer.UI.Elements
             Vec2 size = new();
             Vec2 pos = ScreenRect.Position;
 
-            foreach (UIElement element in Elements)
+            foreach (UIElement element in Elements.ToArray())
             {
                 Vec2 elementBR = element.ScreenRect.Position + element.ScreenRect.Size + element.Margin.BottomRight - pos;
                 size.X = Math.Max(size.X, elementBR.X);

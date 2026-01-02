@@ -1,4 +1,4 @@
-﻿using Cornifer.UI.Helpers;
+using Cornifer.UI.Helpers;
 using Cornifer.UI.Structures;
 using System;
 using System.Collections.Generic;
@@ -26,7 +26,7 @@ namespace Cornifer.UI.Elements
             Vec2 size = Vec2.Zero;
             float lineMaxHeight = 0;
 
-            foreach (UIElement element in Elements)
+            foreach (UIElement element in Elements.ToArray())
             {
                 if (pos.X + element.ScreenRect.Width + element.Margin.Horizontal > ScreenRect.Width)
                 {
@@ -75,7 +75,7 @@ namespace Cornifer.UI.Elements
             Vec2 pos = ScreenRect.Position;
             float lineMaxHeight = 0;
 
-            foreach (UIElement element in Elements)
+            foreach (UIElement element in Elements.ToArray())
             {
                 if (pos.X + element.ScreenRect.Width + element.Margin.Horizontal > ScreenRect.Right)
                 {

@@ -1,4 +1,4 @@
-﻿using DiscordRPC.Logging;
+using DiscordRPC.Logging;
 using DiscordRPC;
 using System;
 using static System.Windows.Forms.AxHost;
@@ -13,7 +13,7 @@ namespace Cornifer
 			State = "Browsing Regions"
 		};
 
-		public static DiscordRpcClient Client;
+		public static DiscordRpcClient Client = null!;
 
 		//Called when your application first starts.
 		//For example, just before your main loop, on OnEnable for unity.

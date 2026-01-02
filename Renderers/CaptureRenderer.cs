@@ -1,4 +1,4 @@
-﻿using Cornifer.MapObjects;
+using Cornifer.MapObjects;
 using Cornifer.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -61,10 +61,10 @@ namespace Cornifer.Renderers
             for (int j = 0; j < height; j++)
             {
                 Colors.AsSpan(j * RenderTarget.Width, width)
-                    .CopyTo(ScreenImage.DangerousGetPixelRowMemory(j).Span);
+                    .CopyTo(ScreenImage!.DangerousGetPixelRowMemory(j).Span);
             }
             Vector2 drawPos = TransformVector(CapturePos);
-            Image.Mutate(f => f.DrawImage(ScreenImage, new SixLabors.ImageSharp.Point((int)drawPos.X, (int)drawPos.Y), 1));
+            Image.Mutate(f => f.DrawImage(ScreenImage!, new SixLabors.ImageSharp.Point((int)drawPos.X, (int)drawPos.Y), 1));
             Capturing = false;
         }
 

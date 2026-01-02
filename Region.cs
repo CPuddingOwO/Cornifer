@@ -35,7 +35,7 @@ namespace Cornifer
         string? WorldString;
         string? MapString;
         string? PropertiesString;
-        string? GateLockString;
+        string? GateLockString; 
 
         public bool LegacyFormat = false;
 
@@ -62,7 +62,7 @@ namespace Cornifer
             Id = info.Id.ToUpper();
 
             RegionColor = ColorDatabase.GetRegionColor(Id, null);
-            string? regionColorFile = RWAssets.ResolveFile(Path.Combine(info.Path, "regioncolor.txt"));
+            string? regionColorFile = RWAssets.ResolveFile(System.IO.Path.Combine(info.Path, "regioncolor.txt"));
             if (regionColorFile != null)
             {
                 Color? c = ColorDatabase.ParseColor(File.ReadAllText(regionColorFile).Trim());
@@ -94,13 +94,16 @@ namespace Cornifer
                 int loadedCount = 0;
                 Parallel.ForEach(Rooms, room =>
                 {
-                    string roomFileName = (room.replaceRoomName ?? room.Name)!;
+                    if (room.Name is null)
+                        return;
+
+                    string roomFileName = room.replaceRoomName ?? room.Name;
                     string roomPath = room.Name.StartsWith("GATE") ? $"world/gates/{roomFileName}" : $"{info.RoomsPath}/{roomFileName}";
 
                     string? settings = RWAssets.ResolveSlugcatFile(roomPath + "_settings.txt");
                     if (settings is null)
                     {
-                        string templatePath = Path.Combine(Main.MainDir, "Assets/room_settings_template.txt");
+                        string templatePath = System.IO.Path.Combine(Main.MainDir, "Assets/room_settings_template.txt");
                         if (File.Exists(templatePath))
                             settings = templatePath;
                     }
@@ -599,8 +602,8 @@ namespace Cornifer
                 var remaining = nonPositionedRooms.Where(r => !r.Positioned).ToArray();
                 int hidingCount = remaining.Length;
                 var remainingNames = remaining.Select(r => r.Name).ToArray();
-                var hiddenNames = remainingNames.Where(n => hideRooms.ContainsKey(n)).ToArray();
-                var excludedNames = remainingNames.Where(n => exclusiveRooms.ContainsKey(n)).ToArray();
+                var hiddenNames = remainingNames.Where(n => n is not null && hideRooms.ContainsKey(n)).ToArray()!;
+                var excludedNames = remainingNames.Where(n => n is not null && exclusiveRooms.ContainsKey(n)).ToArray()!;
 
                 string details = $"Region {Id}: {totalNonPositioned} rooms weren't initially positioned. " +
                                  $"Hiding {hidingCount} rooms that remain unpositioned. " +

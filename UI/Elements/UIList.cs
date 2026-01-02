@@ -83,7 +83,10 @@ namespace Cornifer.UI.Elements
             Rectangle oldScissors = spriteBatch.GraphicsDevice.ScissorRectangle;
             spriteBatch.GraphicsDevice.ScissorRectangle = (Rectangle)rect.Intersect(oldScissors);
 
-            foreach (UIElement element in Elements)
+            DrawList.Clear();
+            DrawList.AddRange(Elements);
+
+            foreach (UIElement element in DrawList)
                 if (element != ScrollBar && element.Visible)
                     element.Draw(spriteBatch);
 
@@ -188,7 +191,7 @@ namespace Cornifer.UI.Elements
 
             float startPos = ScreenRect.Y + Padding.Top - ScrollBar.ScrollPosition;
 
-            foreach (UIElement element in Elements)
+            foreach (UIElement element in Elements.ToArray())
             {
                 if (element == ScrollBar || !element.Visible)
                     continue;

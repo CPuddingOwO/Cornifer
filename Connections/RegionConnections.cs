@@ -14,7 +14,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json.Nodes;
-using Cornifer.Structures;
 using static Cornifer.MapObjects.Room;
 
 namespace Cornifer.Connections
@@ -691,6 +690,9 @@ namespace Cornifer.Connections
         }
 
 		static bool IsDirectionallyValid(Connection connection) {
+			if (connection.IsRegionLink)
+				return true;
+
 			Point sourceDir = connection.Source.GetShortcutExitDirection(connection.SourcePoint);
 			Point destDir = connection.Destination.GetShortcutExitDirection(connection.DestinationPoint);
 

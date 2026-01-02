@@ -17,7 +17,8 @@ namespace Cornifer.UI.Elements
 
         public Offset4 Padding;
 
-        private List<UIElement> UpdateList = new();
+        protected List<UIElement> UpdateList = new();
+        protected List<UIElement> DrawList = new();
 
         public override UIRoot Root
         {
@@ -54,11 +55,14 @@ namespace Cornifer.UI.Elements
         {
             PreDrawChildren(spriteBatch);
 
-            foreach (UIElement element in Elements)
+            DrawList.Clear();
+            DrawList.AddRange(Elements);
+
+            foreach (UIElement element in DrawList)
                 if (element.Visible && element is not UIModal)
                     element.Draw(spriteBatch);
 
-            foreach (UIElement element in Elements)
+            foreach (UIElement element in DrawList)
                 if (element.Visible && element is UIModal modal)
                 {
                     modal.DrawModalBackground(spriteBatch);
