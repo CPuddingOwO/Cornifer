@@ -21,15 +21,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AlexMacocian.MonoGame.ImGuiNet" Version="1.1.0"/>
-        <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.1.0"/>
-        <PackageReference Include="DiscordRichPresence" Version="1.2.1.24"/>
-        <PackageReference Include="FontStashSharp.MonoGame" Version="1.5.2"/>
-        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303"/>
-        <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303"/>
-        <PackageReference Include="MonoGame.ImGuiNet" Version="1.0.5"/>
-        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12"/>
-        <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.5"/>
+        <PackageReference Include="AlexMacocian.MonoGame.ImGuiNet" Version="1.1.0" />
+        <PackageReference Include="Arch" Version="2.1.0" />
+        <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.4.0" />
+        <PackageReference Include="DiscordRichPresence" Version="1.2.1.24" />
+        <PackageReference Include="FontStashSharp.MonoGame" Version="1.5.2" />
+        <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+        <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
+        <PackageReference Include="MonoGame.ImGuiNet" Version="1.0.5" />
+        <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
+        <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.5" />
     </ItemGroup>
 
     <ItemGroup>
@@ -42,8 +43,8 @@
         <None Update="Assets\Atlases\uisprites*.*">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>
         </None>
-        <None Remove="Content\bin\**"/>
-        <None Remove="Content\obj\**"/>
+        <None Remove="Content\bin\**" />
+        <None Remove="Content\obj\**" />
         <None Update="Content\Font\RodondoExt20M.txt">
             <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </None>
@@ -59,49 +60,49 @@
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="Icon.ico" LogicalName="Icon.ico"/>
-        <EmbeddedResource Include="Icon.bmp" LogicalName="Icon.bmp"/>
-        <EmbeddedResource Remove="Content\bin\**"/>
-        <EmbeddedResource Remove="Content\obj\**"/>
+        <EmbeddedResource Include="Icon.ico" LogicalName="Icon.ico" />
+        <EmbeddedResource Include="Icon.bmp" LogicalName="Icon.bmp" />
+        <EmbeddedResource Remove="Content\bin\**" />
+        <EmbeddedResource Remove="Content\obj\**" />
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Content\Config\"/>
-        <Folder Include="Interface\"/>
+        <Folder Include="Content\Config\" />
+        <Folder Include="Interface\" />
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Remove="Content\bin\**"/>
-        <Compile Remove="Content\obj\**"/>
-        <Compile Remove="Renderer\CaptureRenderer.cs"/>
-        <Compile Remove="Renderer\ICapturingRenderer.cs"/>
-        <Compile Remove="Renderer\ImageMapRenderer.cs"/>
-        <Compile Remove="Renderer\ShadeRenderer.cs"/>
-        <Compile Remove="Renderers\ShadeRenderer.cs"/>
-        <Compile Remove="Renderers\CaptureRenderer.cs"/>
-        <Compile Remove="Renderers\ICapturingRenderer.cs"/>
-        <Compile Remove="Renderers\ImageMapRenderer.cs"/>
+        <Compile Remove="Content\bin\**" />
+        <Compile Remove="Content\obj\**" />
+        <Compile Remove="Renderer\CaptureRenderer.cs" />
+        <Compile Remove="Renderer\ICapturingRenderer.cs" />
+        <Compile Remove="Renderer\ImageMapRenderer.cs" />
+        <Compile Remove="Renderer\ShadeRenderer.cs" />
+        <Compile Remove="Renderers\ShadeRenderer.cs" />
+        <Compile Remove="Renderers\CaptureRenderer.cs" />
+        <Compile Remove="Renderers\ICapturingRenderer.cs" />
+        <Compile Remove="Renderers\ImageMapRenderer.cs" />
     </ItemGroup>
 
     <Target Name="GitInfo" AfterTargets="AfterBuild" Condition="Exists('.git')">
         <Exec Command="git rev-parse --short HEAD" IgnoreExitCode="true">
-            <Output TaskParameter="ConsoleOutput" PropertyName="GitCommit"/>
+            <Output TaskParameter="ConsoleOutput" PropertyName="GitCommit" />
         </Exec>
         <Exec Command="git rev-parse --abbrev-ref HEAD" IgnoreExitCode="true">
-            <Output TaskParameter="ConsoleOutput" PropertyName="GitBranch"/>
+            <Output TaskParameter="ConsoleOutput" PropertyName="GitBranch" />
         </Exec>
         <PropertyGroup>
             <GitCommit Condition="'$(GitCommit)' == ''">Unknown</GitCommit>
             <GitBranch Condition="'$(GitBranch)' == ''">Unknown</GitBranch>
         </PropertyGroup>
-        <WriteLinesToFile File="$(OutDir)/gitinfo" Lines="$(GitCommit)%0a$(GitBranch)" Overwrite="true"/>
+        <WriteLinesToFile File="$(OutDir)/gitinfo" Lines="$(GitCommit)%0a$(GitBranch)" Overwrite="true" />
     </Target>
 
     <Target Name="DeleteUnusedRuntimes" AfterTargets="AfterBuild" Condition="'$(RuntimeIdentifier)' != ''">
         <ItemGroup>
-            <UnusedRuntimes Include="$(OutDir)runtimes\**"/>
-            <UnusedRuntimes Remove="$(OutDir)runtimes\win*\**"/>
+            <UnusedRuntimes Include="$(OutDir)runtimes\**" />
+            <UnusedRuntimes Remove="$(OutDir)runtimes\win*\**" />
         </ItemGroup>
-        <Delete Files="@(UnusedRuntimes)" ContinueOnError="true"/>
+        <Delete Files="@(UnusedRuntimes)" ContinueOnError="true" />
     </Target>
 </Project>

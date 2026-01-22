@@ -1,0 +1,110 @@
+﻿using System;
+using System.IO;
+using Arch.Core;
+using MonoGame.ImGuiNet;
+using ImGuiNET;
+using Microsoft.Xna.Framework;
+
+namespace Cornifer;
+
+public static class Interface {
+    private static ImGuiRenderer _renderer = null!;
+    public static bool IsHovered { get; private set; }
+
+    public static void BeginLayout(GameTime gt) => _renderer.BeginLayout(gt);
+    public static void EndLayout() => _renderer.EndLayout();
+
+
+    public static void Initialize() {
+        _renderer = new ImGuiRenderer(App.Instance);
+        var io = ImGui.GetIO();
+
+        string fontPath = Path.Combine(App.AppLocation, "Content/Font/MapleMonoNormalNL-NF-CN-Regular.ttf");
+
+        if (File.Exists(fontPath)) {
+            // 开启不安全上下文以处理指针
+            unsafe {
+                // 创建 ImFontConfig 实例
+                ImFontConfig* configPtr = ImGuiNative.ImFontConfig_ImFontConfig();
+
+                // 转换为包装器指针以便方便操作
+                ImFontConfigPtr fontConfig = new ImFontConfigPtr(configPtr);
+
+                // --- 棱角分明的关键设置 ---
+                fontConfig.PixelSnapH = true; // 像素对齐
+                fontConfig.OversampleH = 1; // 禁用水平过采样（减少模糊）
+                fontConfig.OversampleV = 1; // 禁用垂直过采样（减少模糊）
+
+                io.Fonts.Clear();
+
+                // 传入配置进行加载
+                io.Fonts.AddFontFromFileTTF(fontPath, 32, fontConfig, io.Fonts.GetGlyphRangesChineseFull());
+
+                // 重建图集
+                _renderer.RebuildFontAtlas();
+
+                // 销毁原生配置对象，防止内存泄漏
+                ImGuiNative.ImFontConfig_destroy(configPtr);
+            }
+        }
+    }
+
+    public static void Draw() {
+        // --- 获取窗口尺寸 ---
+        var viewport = ImGui.GetMainViewport();
+        float windowHeight = viewport.Size.Y;
+        float windowWidth = viewport.Size.X;
+
+        // --- 1. 设置窗口的位置和大小 ---
+        // 位置：X = 总宽 - 面板宽, Y = 0 (右上角)
+        ImGui.SetNextWindowPos(new System.Numerics.Vector2(windowWidth - 400f - 8, 8));
+        // 大小：宽 = SidePanelWidth, 高 = 窗口总高
+        ImGui.SetNextWindowSize(new System.Numerics.Vector2(400f, windowHeight - 16));
+
+        // --- 2. 窗口配置标志 ---
+        // NoMove: 禁止用户拖动面板位置
+        // NoCollapse: 禁止折叠
+        // NoTitleBar: 如果你想要一个纯净的侧边栏，可以去掉标题栏
+        // NoResize: 关键！我们要禁用原生的右下角缩放，改为自己实现的左侧缩放
+        ImGuiWindowFlags flags = ImGuiWindowFlags.NoMove |
+                                 ImGuiWindowFlags.NoCollapse |
+                                 ImGuiWindowFlags.NoResize;
+
+        if (ImGui.Begin("SidePanel", flags)) {
+            // 这里的 IsHovered 会更新，CameraRenderer 就能据此停止地图操作
+            IsHovered = ImGui.IsWindowHovered() || ImGui.IsAnyItemHovered();
+            
+            ImGui.Separator();
+
+            // 示例内容
+            if (ImGui.CollapsingHeader("视图控制", ImGuiTreeNodeFlags.DefaultOpen)) {
+                if (ImGui.Button("重置相机")) {
+                    App.WorldCamera.Position = Vector2.Zero;
+                    App.WorldCamera.Scale = 1.0f;
+                }
+            }
+            
+            ImGui.Separator();
+            
+            if (ImGui.Button("放置测试对象")) {
+                Map.SelectedEntity = Map.Place("TestObject", new  Vector2(0, 0));
+            }
+
+            ImGui.Separator();
+            if (Map.SelectedEntity.HasValue) {
+                ArchInspector.Draw(Map.SelectedEntity.Value);
+
+                if (ImGui.Button("删除选中的对象")) {
+                    Map.World.Destroy(Map.SelectedEntity.Value);
+                    Map.SelectedEntity = null;
+                }
+            } else {
+                ImGui.TextDisabled("未选中任何对象");
+            }
+
+            ImGui.End();
+        }
+
+        ImGui.ShowStyleEditor();
+    }
+}
