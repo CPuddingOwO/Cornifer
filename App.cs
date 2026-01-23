@@ -13,6 +13,8 @@ public class App : Game {
     public static App Instance { get; private set; } = null!;
     public static GraphicsDeviceManager GraphicsManager = null!;
     public static SpriteBatch SpriteBatch = null!;
+    private static GraphicsDeviceManager _graphicsManager = null!;
+    private static SpriteBatch _spriteBatch = null!;
     
     public static CameraRenderer WorldCamera = null!;
     
@@ -28,14 +30,14 @@ public class App : Game {
 
     public App() {
         Instance = this;
-        GraphicsManager = new GraphicsDeviceManager(this);
+        _graphicsManager = new GraphicsDeviceManager(this);
         IsMouseVisible = true; 
         
         // --- 开启窗口缩放 ---
         Window.AllowUserResizing = true; 
         Window.ClientSizeChanged += (s, e) => {
             // 更新摄像机的投影矩阵
-            WorldCamera.Size = GraphicsDevice.Viewport.Bounds.Size.ToVector2();
+            WorldCamera.Size = _graphicsManager.GraphicsDevice.Viewport.Bounds.Size.ToVector2();
         };
     }
     
@@ -48,6 +50,8 @@ public class App : Game {
     protected override void LoadContent() {
         SpriteBatch = new SpriteBatch(GraphicsDevice);
         WorldCamera = new CameraRenderer(SpriteBatch);
+        _spriteBatch = new SpriteBatch(_graphicsManager.GraphicsDevice);
+        WorldCamera = new CameraRenderer(_spriteBatch);
         Cornifer.Content.Initialize(Content);
         
         base.LoadContent();
@@ -62,7 +66,7 @@ public class App : Game {
     }
 
     protected override void Draw(GameTime gt) {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
+        _graphicsManager.GraphicsDevice.Clear(Color.CornflowerBlue);
 
         // --- MonoGame 绘制 ---
         SpriteBatch.Begin(transformMatrix: WorldCamera.Transform, samplerState: SamplerState.PointClamp);

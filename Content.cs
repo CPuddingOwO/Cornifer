@@ -35,7 +35,7 @@ public static class Content {
             Objects = cm.Load<Texture2D>("Texture/Objects");
             SlugcatIcons = cm.Load<Texture2D>("Texture/SlugcatIcons");
             
-            Pixel = new Texture2D(App.GraphicsManager.GraphicsDevice, 1, 1);
+            Pixel = new Texture2D(App.WorldCamera.SpriteBatch.GraphicsDevice,1, 1);
             Pixel.SetData([Color.White]);
         }
     }
