@@ -12,7 +12,6 @@ public struct Identifier {
 
 // 渲染信息
 public struct Visual {
-    public Vector2 Size;
     public Texture2D Texture;
     public bool Visible;
 
