@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Arch.Core;
+using Arch.Core.Extensions;
 using MonoGame.ImGuiNet;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -87,7 +88,7 @@ public static class Interface {
             ImGui.Separator();
             
             if (ImGui.Button("放置测试对象")) {
-                Map.SelectedEntity = Map.Place("TestObject", new  Vector2(0, 0));
+               Map.SpawnTestData();
             }
 
             ImGui.Separator();
@@ -98,6 +99,8 @@ public static class Interface {
                     Map.World.Destroy(Map.SelectedEntity.Value);
                     Map.SelectedEntity = null;
                 }
+                
+                ImGui.Text(Map.SelectedEntity != null && Map.SelectedEntity.Value.TryGet<Identifier>( out var id) ? $"对象 ID: {id.Name}" : "对象 ID: 未知");
             } else {
                 ImGui.TextDisabled("未选中任何对象");
             }
