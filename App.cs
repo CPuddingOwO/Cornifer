@@ -11,9 +11,7 @@ namespace Cornifer;
 
 public class App : Game {
     public static App Instance { get; private set; } = null!;
-    public static GraphicsDeviceManager GraphicsManager = null!;
-    public static SpriteBatch SpriteBatch = null!;
-    private static GraphicsDeviceManager _graphicsManager = null!;
+     private static GraphicsDeviceManager _graphicsManager = null!;
     private static SpriteBatch _spriteBatch = null!;
     
     public static CameraRenderer WorldCamera = null!;
@@ -48,11 +46,11 @@ public class App : Game {
     }
     
     protected override void LoadContent() {
-        SpriteBatch = new SpriteBatch(GraphicsDevice);
-        WorldCamera = new CameraRenderer(SpriteBatch);
         _spriteBatch = new SpriteBatch(_graphicsManager.GraphicsDevice);
         WorldCamera = new CameraRenderer(_spriteBatch);
         Cornifer.Content.Initialize(Content);
+
+        InputHandler.Initialize();
         
         base.LoadContent();
     }
@@ -69,9 +67,9 @@ public class App : Game {
         _graphicsManager.GraphicsDevice.Clear(Color.CornflowerBlue);
 
         // --- MonoGame 绘制 ---
-        SpriteBatch.Begin(transformMatrix: WorldCamera.Transform, samplerState: SamplerState.PointClamp);
-        ArchRegister.Draw();
-        SpriteBatch.End();
+        _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+        ArchRegister.Draw(WorldCamera);
+        _spriteBatch.End();
 
         // --- 绘制 ImGui ---
         Interface.BeginLayout(gt);
