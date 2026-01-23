@@ -29,10 +29,14 @@ public static class Content {
     public static class Tex {
         public static Texture2D Objects { get; internal set; } = default!;
         public static Texture2D SlugcatIcons { get; internal set; } = default!;
+        public static Texture2D Pixel { get; internal set; } = default!;
 
         internal static void Load(ContentManager cm) {
             Objects = cm.Load<Texture2D>("Texture/Objects");
             SlugcatIcons = cm.Load<Texture2D>("Texture/SlugcatIcons");
+            
+            Pixel = new Texture2D(App.GraphicsManager.GraphicsDevice, 1, 1);
+            Pixel.SetData([Color.White]);
         }
     }
 
