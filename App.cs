@@ -56,8 +56,8 @@ public class App : Game {
     }
     
     protected override void Update(GameTime gt) {
-        Map.Update(gt);
         InputHandler.Update();
+        Map.Update(gt);
         WorldCamera.Update();
         
         base.Update(gt);
