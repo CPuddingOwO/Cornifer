@@ -11,15 +11,12 @@ namespace Cornifer;
 
 public class App : Game {
     public static App Instance { get; private set; } = null!;
-     private static GraphicsDeviceManager _graphicsManager = null!;
-    private static SpriteBatch _spriteBatch = null!;
-    
+    public static readonly string AppLocation;
     public static CameraRenderer WorldCamera = null!;
     
-    public static bool Dragging = false;
-    public static bool Selecting = false;
+    private static GraphicsDeviceManager _graphicsManager = null!;
+    private static SpriteBatch _spriteBatch = null!;
     
-    public static readonly string AppLocation;
     
     static App() {
         AppLocation = AppDomain.CurrentDomain.BaseDirectory;
@@ -42,12 +39,12 @@ public class App : Game {
     protected override void Initialize() {
         Interface.Initialize();
         Map.Initialize();
+        _spriteBatch = new SpriteBatch(_graphicsManager.GraphicsDevice);
+        WorldCamera = new CameraRenderer(_spriteBatch);
         base.Initialize();
     }
     
     protected override void LoadContent() {
-        _spriteBatch = new SpriteBatch(_graphicsManager.GraphicsDevice);
-        WorldCamera = new CameraRenderer(_spriteBatch);
         Cornifer.Content.Initialize(Content);
 
         InputHandler.Initialize();
@@ -58,18 +55,17 @@ public class App : Game {
     protected override void Update(GameTime gt) {
         InputHandler.Update();
         Map.Update(gt);
+        ArchRegister.Update();
         WorldCamera.Update();
         
         base.Update(gt);
     }
 
     protected override void Draw(GameTime gt) {
-        _graphicsManager.GraphicsDevice.Clear(Color.CornflowerBlue);
+        // _graphicsManager.GraphicsDevice.Clear(Color.CornflowerBlue);
 
         // --- MonoGame 绘制 ---
-        _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
         ArchRegister.Draw(WorldCamera);
-        _spriteBatch.End();
 
         // --- 绘制 ImGui ---
         Interface.BeginLayout(gt);
