@@ -84,6 +84,10 @@
         <Compile Remove="Renderers\ImageMapRenderer.cs" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ClCompile Include="Content\Effect\ShadowShader.fx" />
+    </ItemGroup>
+
     <Target Name="GitInfo" AfterTargets="AfterBuild" Condition="Exists('.git')">
         <Exec Command="git rev-parse --short HEAD" IgnoreExitCode="true">
             <Output TaskParameter="ConsoleOutput" PropertyName="GitCommit" />
