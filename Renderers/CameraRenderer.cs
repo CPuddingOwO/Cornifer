@@ -15,8 +15,7 @@ public class CameraRenderer(SpriteBatch spriteBatch) : ScreenRenderer(spriteBatc
         var state = InputHandler.MouseState;
         var screenPos = state.Position.ToVector2();
 
-        var drag = App.Instance.IsActive && !Interface.IsHovered && !App.Dragging && !App.Selecting &&
-                   InputHandler.MoveCamera.Pressed;
+        var drag = App.Instance.IsActive && !Interface.IsHovered && InputHandler.MoveCamera.Pressed;
 
         UpdateDragging(drag, screenPos);
 
