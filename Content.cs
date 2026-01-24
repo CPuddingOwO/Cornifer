@@ -65,6 +65,14 @@ public static class Content {
         }
     }
 
+    public static class Ect {
+        public static Effect Shadow { get; internal set; } = null!;
+        
+        internal static void Load(ContentManager cm) {
+            Shadow = cm.Load<Effect>("Effect/ShadowShader");
+        }
+    }
+
     // --- 总入口 ---
     public static void Initialize(ContentManager content) {
         var root = Path.Combine(App.AppLocation, "Content");
@@ -74,6 +82,7 @@ public static class Content {
         Tex.Load(content);
         Snd.Load(content);
         Cfg.Load(content);
+        Ect.Load(content);
     }
     
     static SpriteFont LoadManualSpritefont(string path) {
