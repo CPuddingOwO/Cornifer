@@ -2,6 +2,7 @@
 using System.IO;
 using Arch.Core;
 using Arch.Core.Extensions;
+using Cornifer.Input;
 using MonoGame.ImGuiNet;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
@@ -92,15 +93,20 @@ public static class Interface {
             }
 
             ImGui.Separator();
-            if (Map.SelectedEntity.HasValue) {
-                ArchInspector.Draw(Map.SelectedEntity.Value);
-
-                if (ImGui.Button("删除选中的对象")) {
-                    Map.World.Destroy(Map.SelectedEntity.Value);
-                    Map.SelectedEntity = null;
+            if (Map.SelectedEntities.Count != 0) {
+                if (ImGui.Button("删除选中的对象") || InputHandler.DeleteEntity.Pressed) {
+                    foreach (var entity in Map.SelectedEntities) {
+                        Console.WriteLine("Remove Entity: " + (entity.TryGet<Identifier>( out var id) ? id.Name : "Unknown"));
+                        Map.SelectedEntities.Remove(entity);
+                        Map.World.Destroy(entity);   
+                    }
                 }
                 
-                ImGui.Text(Map.SelectedEntity != null && Map.SelectedEntity.Value.TryGet<Identifier>( out var id) ? $"对象 ID: {id.Name}" : "对象 ID: 未知");
+                foreach (var entity in Map.SelectedEntities) {
+                    ArchInspector.Draw(entity);
+                    ImGui.Text(entity.TryGet<Identifier>( out var id) ? $"对象 ID: {id.Name}" : "对象 ID: 未知");
+                }
+                
             } else {
                 ImGui.TextDisabled("未选中任何对象");
             }
