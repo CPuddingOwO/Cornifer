@@ -31,10 +31,14 @@ public static class Map {
                 Texture = tex,
                 Visible = true,
                 WorldPosition = worldPos,
-                OffsetPosition = worldPos, // 初始时 Offset = World
                 LocalPosition = new Vector2(tex.Width / 2f, tex.Height / 2f) // 默认原点在正中心
             },
-            new LayerMember { Layer = layer, Locked = false }
+            new Hierarchy(),
+            new LayerMember { Layer = layer, Locked = false },
+            new Shadow() {
+                CornerRadius = 6,
+                Amount = 5
+            }
         );
     }
 
@@ -44,20 +48,12 @@ public static class Map {
         Random rand = new();
 
         for (var i = 0; i < 50; i++) {
-            var randomPos = new Vector2(rand.Next(0, 2000), rand.Next(0, 2000));
-            Place($"Object_{i}", randomPos, tex, (Layer)rand.Next(0, 4));
+            var randomPos = new Vector2(rand.Next(-2000, 2000), rand.Next(-2000, 2000));
+            var e = Place($"Object_{i}", randomPos, tex, (Layer)rand.Next(0, 4));
+            if (rand.Next(0, 2) != 0) continue;
+            HierarchySystem.SetParent(e, Place($"Object_Child_{i}", new Vector2(randomPos.X+100, randomPos.Y+100), Content.Tex.SlugcatIcons, (Layer)rand.Next(0, 4)));
         }
     }
 
-    public static void Update(GameTime gt) {
-        ArchRegister.Update();
-        
-        // if (InputHandler.Select.JustPressed && !Interface.IsHovered) {
-        //     var worldMouse = App.WorldCamera.InverseTransformVector(InputHandler.MouseState.Position.ToVector2());
-        //     SelectedEntities.Clear();
-        //     var e = SpatialSystem.GetEntityAtPixel(worldMouse);
-        //     if (e.HasValue) SelectedEntities.Add(e.Value);
-        // }
-        
-    }
+    public static void Update(GameTime gt) { }
 }
