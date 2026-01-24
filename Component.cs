@@ -15,22 +15,25 @@ public struct Visual {
     public Texture2D Texture;
     public bool Visible;
 
-    public Vector2 WorldPosition; // 绝对坐标
-    public Vector2 OffsetPosition; // 相对父物体的偏移
-    public Vector2 LocalPosition; // 纹理内相对于左下角的原点 (逻辑锚点)
+    public Vector2 WorldPosition; // Entity原点的世界坐标
+    public Vector2 LocalPosition; // Entity原点在贴图上的本地坐标（偏移）
 }
 
-// 阴影数据
 public struct Shadow {
-    public int Size;
-    public Texture2D? Texture;
-    public bool IsDirty;
+    // --- 已弃用 CPU 生成阴影方案 ShadowBaker ---
+    // --- DEPRECATED CPU Shadow Baking Scheme ShadowBaker ---
+    public Texture2D? Texture;  // 阴影贴图: 自动生成 根据对应的 Visual.Texture
+    public Vector2 Offset;      // 阴影通常比原图大，所以渲染位置要偏移 -(shadowAmount)
+    // --- END ---
+    
+    public int Amount;          // 阴影扩展量
+    public int CornerRadius;    // 圆角半径
 }
 
-// 层级关系
-public struct Hierarchy {
-    public Entity? Parent;
-    public List<Entity> Children;
+// 父子关系
+public struct Hierarchy() {
+    public Entity? Parent = null;
+    public List<Entity> Children = [];
 }
 
 public struct LayerMember {
