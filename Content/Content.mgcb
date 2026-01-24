@@ -5,7 +5,7 @@
 /intermediateDir:obj/$(Platform)
 /platform:DesktopGL
 /config:
-/profile:Reach
+/profile:HiDef
 /compress:False
 
 #-------------------------------- References --------------------------------#
@@ -13,13 +13,20 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin Idle.mp3
+#begin Audio/Idle.mp3
 /importer:Mp3Importer
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Audio/Idle.mp3
 
-#begin MiscSprites.png
+#begin Effect/ShadowShader.fx
+/importer:EffectImporter
+/processor:EffectProcessor
+/processorParam:DebugMode=Auto
+/processorParam:Defines=
+/build:Effect/ShadowShader.fx
+
+#begin Texture/MiscSprites.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -31,7 +38,7 @@
 /processorParam:TextureFormat=Color
 /build:Texture/MiscSprites.png
 
-#begin Objects.png
+#begin Texture/Objects.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -43,7 +50,7 @@
 /processorParam:TextureFormat=Color
 /build:Texture/Objects.png
 
-#begin SlugcatIcons.png
+#begin Texture/SlugcatIcons.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -55,7 +62,7 @@
 /processorParam:TextureFormat=Color
 /build:Texture/SlugcatIcons.png
 
-#begin SlugcatIconTemplate.png
+#begin Texture/SlugcatIconTemplate.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
