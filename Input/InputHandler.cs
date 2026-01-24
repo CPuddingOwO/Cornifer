@@ -20,11 +20,14 @@ public static class InputHandler {
     public static Vector2 MouseDelta => (MouseState.Position - PrevMouseState.Position).ToVector2();
 
     // Keybinds
-    // public static Keybind Undo = new("Undo", ModifierKeys.Control, Keys.Z);
-    // public static Keybind Redo = new("Redo", ModifierKeys.Control, Keys.Y);
+    public static readonly Keybind Undo = new("Undo", ModifierKeys.Control, Keys.Z);
+    public static readonly Keybind Redo = new("Redo", ModifierKeys.Control, Keys.Y);
 
-    public static readonly Keybind Select = new("Select", MouseKeys.LeftButton);
-    public static readonly Keybind Move = new("Move", MouseKeys.RightButton);
+    public static readonly Keybind SelectEntity = new("SingleSelect", MouseKeys.LeftButton);
+    public static readonly Keybind MoveEntity = new("MoveEntity", MouseKeys.LeftButton);
+    public static readonly Keybind MoveCamera = new("MoveCamera", MouseKeys.RightButton);
+    public static readonly Keybind DeleteEntity = new("Delete", Keys.Delete);
+    
 
 
     public static void Initialize() {
