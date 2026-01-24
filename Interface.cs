@@ -104,7 +104,10 @@ public static class Interface {
                 
                 foreach (var entity in Map.SelectedEntities) {
                     ArchInspector.Draw(entity);
+                    ImGui.BeginGroup();
                     ImGui.Text(entity.TryGet<Identifier>( out var id) ? $"对象 ID: {id.Name}" : "对象 ID: 未知");
+                    ImGui.Text(entity.TryGet<LayerMember>( out var layer) ? $"图层: {layer.Layer}" : "图层: 未知");
+                    ImGui.EndGroup();
                 }
                 
             } else {
@@ -114,6 +117,7 @@ public static class Interface {
             ImGui.End();
         }
 
-        ImGui.ShowStyleEditor();
+        // ImGui.ShowStyleEditor();
+        // ImGui.ShowDemoWindow();
     }
 }
