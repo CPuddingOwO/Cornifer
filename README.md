@@ -1,18 +1,14 @@
 # Cornifer
-<img width="400" src="./Icon.png">
+
+<img width="200" src="./Icon.png" alt="Icon">
 
 A Rain World mapping tool.
 
-### Usage
+## Legacy Version
 
-Select and move rooms and icons with left click and drag.
+In Legacy Branch and Releases
 
-Use Left Shift and Left Control to add to selection and exclude from selection.
+## (WIP) Refactored Version
 
-Move around with right click.
-
-Zoom with mouse wheel.
-
-### Download
-See releases for latest build.
+In Refactor/Issue-4-Fully Branch - (WIP)
 
