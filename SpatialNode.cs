@@ -52,6 +52,38 @@ public class SpatialNode(Rectangle bounds, int depth = 0) {
             }
         }
     }
+    
+    /// <summary>
+    /// 检索与指定矩形区域相交的所有实体。
+    /// </summary>
+    /// <param name="range">世界空间下的检索矩形</param>
+    /// <param name="results">用于存储结果的列表（建议由调用方预分配内存）</param>
+    public void Query(Rectangle range, List<Entity> results) {
+        // 快速排斥：如果查询区域与当前节点完全不相交，直接跳过
+        if (!_bounds.Intersects(range)) {
+            return;
+        }
+
+        // 如果存在子节点，则递归向下查找
+        if (_children != null) {
+            // 使用普通循环代替 foreach 减少迭代器开销
+            for (int i = 0; i < 4; i++) {
+                _children[i].Query(range, results);
+            }
+        } 
+        // 如果是叶子节点，进行碰撞判定
+        else {
+            // 工业实践：直接使用 for 循环避免 LINQ 产生的闭包分配
+            for (int i = 0; i < _entries.Count; i++) {
+                var entry = _entries[i];
+            
+                // 判定实体的包围盒是否与检索区域相交
+                if (entry.Bounds.Intersects(range)) {
+                    results.Add(entry.Entity);
+                }
+            }
+        }
+    }
 
     private void Split() {
         var subWidth = _bounds.Width / 2;

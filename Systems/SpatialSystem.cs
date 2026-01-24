@@ -50,8 +50,68 @@ public static class SpatialSystem {
             .FirstOrDefault(entity => IsPixelHit(entity, worldMousePos));
     }
 
+    /// <summary>
+    /// 获取矩形区域内所有满足像素级判定的实体。
+    /// </summary>
+    /// <param name="rect">世界空间下的目标检索矩形</param>
+    /// <param name="resultBuffer">用于存储结果的列表</param>
+    public static void GetEntitiesInRect(Rectangle rect, List<Entity> resultBuffer) {
+        if (_root == null) return;
+
+        // 1. 利用四叉树初步筛选出所有包围盒相交的实体
+        CandidateBuffer.Clear();
+        _root.Query(rect, CandidateBuffer);
+
+        if (CandidateBuffer.Count == 0) return;
+
+        // 2. 遍历候选者，执行像素精度的相交检查
+        foreach (Entity entity in CandidateBuffer) {
+            if (IsRectPixelHit(entity, rect)) {
+                resultBuffer.Add(entity);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 判定实体的非透明像素是否与指定矩形区域有交集。
+    /// </summary>
+    private static bool IsRectPixelHit(Entity entity, Rectangle worldRect) {
+        ref var vis = ref entity.Get<Visual>();
+
+        // 计算实体的世界空间边界矩形
+        Rectangle entityBounds = new(
+            (int)(vis.WorldPosition.X - vis.LocalPosition.X),
+            (int)(vis.WorldPosition.Y - (vis.Texture.Height - vis.LocalPosition.Y)),
+            vis.Texture.Width,
+            vis.Texture.Height
+        );
+
+        // 计算两个矩形的公共交集部分
+        var intersection = Rectangle.Intersect(entityBounds, worldRect);
+        if (intersection.IsEmpty) return false;
+
+        // 遍历交集区域内的每一个像素
+        for (var y = intersection.Top; y < intersection.Bottom; y++) {
+            for (var x = intersection.Left; x < intersection.Right; x++) {
+                // 将当前遍历的世界坐标转回纹理局部坐标
+                // 公式同 IsPixelHit: localX = x - entityLeft
+                var texX = x - entityBounds.X;
+                var texY = y - entityBounds.Y;
+
+                // 采样像素 Alpha 值
+                var pixel = TextureCache.GetPixelAt(vis.Texture, texX, texY);
+
+                // 只要找到一个非透明像素在矩形内，即视为命中
+                if (pixel.A > 0) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     private static bool IsPixelHit(Entity entity, Vector2 worldPos) {
-        
         ref var vis = ref entity.Get<Visual>();
 
         // 1. 将世界坐标转回纹理局部坐标 (Local Space)
