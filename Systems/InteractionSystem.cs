@@ -19,19 +19,10 @@ public static class InteractionSystem {
     private static readonly List<Entity> QueryBuffer = new(128);
 
     public static void Update(Renderer renderer) {
-        var ms = InputHandler.MouseState;
-        var prevMs = InputHandler.PrevMouseState;
-        
-        var worldMouse = renderer.InverseTransformVector(ms.Position.ToVector2());
-        bool isControlDown = InputHandler.KeyboardState.IsKeyDown(Keys.LeftControl);
-
-        // --- 核心修复：手动判定触发边缘，不依赖 Keybind 内部逻辑 ---
-        bool mouseJustPressed = ms.LeftButton == ButtonState.Pressed && prevMs.LeftButton == ButtonState.Released;
-        bool mouseHeld = ms.LeftButton == ButtonState.Pressed;
-        bool mouseJustReleased = ms.LeftButton == ButtonState.Released && prevMs.LeftButton == ButtonState.Pressed;
-
-        // 1. 按下瞬间：由于有了 mouseJustPressed，这一段代码在一趟点击中只会运行一次！
-        if (mouseJustPressed && !Interface.IsHovered) {
+        var worldMouse = renderer.InverseTransformVector(InputHandler.MouseState.Position.ToVector2());
+        var isControlDown = InputHandler.KeyboardState.IsKeyDown(Keys.LeftControl);
+        // 1. 按下瞬间：一趟点击中只会运行一次
+        if (InputHandler.SelectEntity.JustPressed && !Interface.IsHovered) {
             _lastMouseWorldPos = worldMouse;
             var hit = SpatialSystem.GetEntityAtPixel(worldMouse);
 
@@ -52,15 +43,23 @@ public static class InteractionSystem {
         }
 
         // 2. 持续按住：严格根据按下瞬间决定的 currentMode 执行逻辑
-        if (mouseHeld) {
+        if (InputHandler.SelectEntity.Pressed) {
             if (_currentMode == Mode.Dragging) {
-                Vector2 delta = worldMouse - _lastMouseWorldPos;
+                var delta = worldMouse - _lastMouseWorldPos;
+                // var delta = snappedWorldMouse - _lastMouseWorldPos;
                 if (delta != Vector2.Zero) {
                     foreach (var entity in Map.SelectedEntities) {
                         if (!entity.IsAlive()) continue;
                         ref var vis = ref entity.Get<Visual>();
-                        vis.WorldPosition += delta;
-                        vis.OffsetPosition += delta;
+
+                        if (entity.Has<Hierarchy>()) {
+                            var parent = entity.Get<Hierarchy>().Parent;
+                            if (parent.HasValue && Map.SelectedEntities.Contains(parent.Value))
+                                continue;
+                        }
+
+                        // 2. 递归移动该实体及其所有子孙
+                        MoveRecursive(entity, delta);
                     }
                 }
             } else if (_currentMode == Mode.Marquee && _selectionStart.HasValue) {
@@ -75,7 +74,7 @@ public static class InteractionSystem {
         }
 
         // 3. 释放瞬间
-        if (mouseJustReleased) {
+        if (InputHandler.SelectEntity.JustReleased) {
             if (_currentMode == Mode.Marquee && SelectionRect.HasValue) {
                 QueryBuffer.Clear();
                 SpatialSystem.GetEntitiesInRect(SelectionRect.Value, QueryBuffer);
@@ -90,17 +89,35 @@ public static class InteractionSystem {
         _lastMouseWorldPos = worldMouse;
     }
 
+    private static void MoveRecursive(Entity entity, Vector2 delta) {
+        if (!entity.IsAlive()) return;
+
+        // 移动自己
+        if (entity.Has<Visual>()) {
+            ref var vis = ref entity.Get<Visual>();
+            vis.WorldPosition += delta;
+        }
+
+        // 移动子物体
+        if (!entity.Has<Hierarchy>()) return;
+        ref var hier = ref entity.Get<Hierarchy>();
+        foreach (var child in hier.Children) {
+            MoveRecursive(child, delta);
+        }
+    }
+
     public static void DrawSelectionMarquee(Renderer renderer) {
         if (_currentMode != Mode.Marquee || !SelectionRect.HasValue) return;
 
         var rect = SelectionRect.Value;
-        var screenPos = renderer.TransformVector(new(rect.X, rect.Y));
+        var screenPos = renderer.TransformVector(new Vector2(rect.X, rect.Y));
         var screenW = rect.Width * renderer.Scale;
         var screenH = rect.Height * renderer.Scale;
 
-        if (renderer is ScreenRenderer sr) {
-            sr.SpriteBatch.Draw(Content.Tex.Pixel, new Rectangle((int)screenPos.X, (int)screenPos.Y, (int)screenW, (int)screenH), Color.Cyan * 0.2f);
-            GizmoSystem.DrawHollowRect(renderer, new Rectangle((int)screenPos.X, (int)screenPos.Y, (int)screenW, (int)screenH), Color.Cyan, 1);
-        }
+        if (renderer is not ScreenRenderer sr) return;
+        sr.SpriteBatch.Draw(Content.Tex.Pixel,
+            new Rectangle((int)screenPos.X, (int)screenPos.Y, (int)screenW, (int)screenH), Color.Cyan * 0.2f);
+        GizmoSystem.DrawHollowRect(renderer,
+            new Rectangle((int)screenPos.X, (int)screenPos.Y, (int)screenW, (int)screenH), Color.Cyan, 1);
     }
 }
