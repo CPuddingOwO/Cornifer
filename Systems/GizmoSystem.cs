@@ -1,4 +1,5 @@
-﻿using Arch.Core;
+﻿using System.Collections.Generic;
+using Arch.Core;
 using Arch.Core.Extensions;
 using Cornifer.Renderers;
 using Microsoft.Xna.Framework;
@@ -6,38 +7,40 @@ using Microsoft.Xna.Framework;
 namespace Cornifer.Systems;
 
 public static class GizmoSystem {
-    public static void Draw(Renderer renderer, Entity? selected) {
-        if (selected == null || !selected.Value.IsAlive()) return;
+    public static void Draw(Renderer renderer, HashSet<Entity> selectedEntities) {
+        foreach (var entity in selectedEntities) {
+            if (!entity.IsAlive()) return;
+            
+            ref var vis = ref entity.Get<Visual>();
 
-        ref var vis = ref selected.Value.Get<Visual>();
+            // 1. 计算物体在世界空间中的左上角
+            Vector2 worldDrawPos = new(
+                vis.WorldPosition.X - vis.LocalPosition.X,
+                vis.WorldPosition.Y - (vis.Texture.Height - vis.LocalPosition.Y)
+            );
 
-        // 1. 计算物体在世界空间中的左上角
-        Vector2 worldDrawPos = new(
-            vis.WorldPosition.X - vis.LocalPosition.X,
-            vis.WorldPosition.Y - (vis.Texture.Height - vis.LocalPosition.Y)
-        );
+            // 2. 将世界坐标转换为屏幕坐标
+            var screenPos = renderer.TransformVector(worldDrawPos);
 
-        // 2. 将世界坐标转换为屏幕坐标
-        var screenPos = renderer.TransformVector(worldDrawPos);
+            // 3. 计算屏幕上的尺寸 (需要乘以缩放倍率 Scale)
+            var screenW = vis.Texture.Width * renderer.Scale;
+            var screenH = vis.Texture.Height * renderer.Scale;
 
-        // 3. 计算屏幕上的尺寸 (需要乘以缩放倍率 Scale)
-        var screenW = vis.Texture.Width * renderer.Scale;
-        var screenH = vis.Texture.Height * renderer.Scale;
+            // 4. 绘制外框 (使用转换后的屏幕坐标)
+            // 注意：这里的厚度 thickness 设为 2，它在屏幕上永远是 2 像素，不会随缩放变粗
+            DrawHollowRect(renderer, new Rectangle((int)screenPos.X, (int)screenPos.Y, (int)screenW, (int)screenH),
+                Color.Cyan, 2);
 
-        // 4. 绘制外框 (使用转换后的屏幕坐标)
-        // 注意：这里的厚度 thickness 设为 2，它在屏幕上永远是 2 像素，不会随缩放变粗
-        DrawHollowRect(renderer, new Rectangle((int)screenPos.X, (int)screenPos.Y, (int)screenW, (int)screenH),
-            Color.Cyan, 2);
-
-        // 5. 绘制原点 (同样转换 WorldPosition)
-        var screenOrigin = renderer.TransformVector(vis.WorldPosition);
-        if (renderer is ScreenRenderer sr) {
-            sr.SpriteBatch.Draw(Content.Tex.Pixel, screenOrigin - new Vector2(3, 3),
-                null, Color.Yellow, 0, Vector2.Zero, new Vector2(6, 6), default, 0);
+            // 5. 绘制原点 (同样转换 WorldPosition)
+            var screenOrigin = renderer.TransformVector(vis.WorldPosition);
+            if (renderer is ScreenRenderer sr) {
+                sr.SpriteBatch.Draw(Content.Tex.Pixel, screenOrigin - new Vector2(3, 3),
+                    null, Color.Yellow, 0, Vector2.Zero, new Vector2(6, 6), default, 0);
+            }
         }
     }
 
-    private static void DrawHollowRect(Renderer renderer, Rectangle rect, Color color, int thickness) {
+    public static void DrawHollowRect(Renderer renderer, Rectangle rect, Color color, int thickness) {
         if (renderer is not ScreenRenderer sr) return;
 
         // 直接在屏幕空间绘制四条边
