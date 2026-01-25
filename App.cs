@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using Cornifer.Input;
 using Cornifer.Renderers;
+using Cornifer.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -32,6 +30,9 @@ public class App : Game {
         Window.AllowUserResizing = true; 
         Window.ClientSizeChanged += (s, e) => {
             // 更新摄像机的投影矩阵
+            WorldCamera.UpdateBuffer(WorldCamera.SpriteBatch.GraphicsDevice,
+                _graphicsManager.GraphicsDevice.Viewport.Bounds.Size.X,
+                _graphicsManager.GraphicsDevice.Viewport.Bounds.Size.Y);
             WorldCamera.Size = _graphicsManager.GraphicsDevice.Viewport.Bounds.Size.ToVector2();
         };
     }
@@ -41,6 +42,10 @@ public class App : Game {
         Map.Initialize();
         _spriteBatch = new SpriteBatch(_graphicsManager.GraphicsDevice);
         WorldCamera = new CameraRenderer(_spriteBatch);
+        WorldCamera.UpdateBuffer(_graphicsManager.GraphicsDevice,
+            _graphicsManager.GraphicsDevice.Viewport.Bounds.Size.X,
+            _graphicsManager.GraphicsDevice.Viewport.Bounds.Size.Y);
+        CaptureSystem.Initialize(_spriteBatch);
         base.Initialize();
     }
     
@@ -62,6 +67,7 @@ public class App : Game {
     }
 
     protected override void Draw(GameTime gt) {
+        // _graphicsManager.GraphicsDevice.SetRenderTarget(null);
         // _graphicsManager.GraphicsDevice.Clear(Color.CornflowerBlue);
 
         // --- MonoGame 绘制 ---

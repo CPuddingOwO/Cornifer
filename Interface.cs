@@ -88,8 +88,22 @@ public static class Interface {
             
             ImGui.Separator();
             
-            if (ImGui.Button("放置测试对象")) {
-               Map.SpawnTestData();
+            if (ImGui.Button("放置测试对象")) { Map.SpawnTestData(); }
+            ImGui.SameLine();
+            if (ImGui.Button("Capture")) { 
+                var texture = Systems.CaptureSystem.Capture();
+                var directory = Path.GetDirectoryName(App.AppLocation);
+                if (!string.IsNullOrEmpty(directory)) {
+                    Directory.CreateDirectory(directory);
+                }
+
+                // 使用 FileStream 创建文件
+                using (Stream stream = File.Create(App.AppLocation + "/Map.png"))
+                {
+                    // MonoGame 内置方法，会自动处理像素转换和 PNG 编码
+                    texture.SaveAsPng(stream, texture.Width, texture.Height);
+                }
+                texture.Dispose();
             }
 
             ImGui.Separator();

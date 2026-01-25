@@ -10,6 +10,16 @@ namespace Cornifer.Systems;
 public static class SpatialSystem {
     private static SpatialNode? _root;
     private static readonly List<Entity> CandidateBuffer = new(16);
+    
+    // 空间内容边界
+    private static Rectangle _contentBounds;
+    // 所有实体列表
+    private static readonly List<Entity> _allEntities = new(128);
+
+    
+    public static Rectangle ContentBounds => _contentBounds;
+    public static IReadOnlyList<Entity> AllEntities => _allEntities;
+    
 
     /// <summary>
     /// 重建空间索引。应在每一帧更新坐标后调用。
@@ -17,8 +27,43 @@ public static class SpatialSystem {
     public static void RebuildIndex(World world, Rectangle mapSize) {
         _root ??= new SpatialNode(mapSize);
         _root.Clear();
+        
+        // 重置统计数据
+        _allEntities.Clear();
+        int minX = int.MaxValue, minY = int.MaxValue;
+        int maxX = int.MinValue, maxY = int.MinValue;
+        bool hasEntities = false;
 
         var query = new QueryDescription().WithAll<Visual>();
+        world.Query(in query, (Entity entity, ref Visual vis) => {
+            Rectangle bounds = new(
+                (int)(vis.WorldPosition.X - vis.LocalPosition.X),
+                (int)(vis.WorldPosition.Y - (vis.Texture.Height - vis.LocalPosition.Y)),
+                vis.Texture.Width,
+                vis.Texture.Height
+            );
+
+            // 1. 插入四叉树
+            _root.Insert(entity, bounds);
+
+            // 2. 顺便收集所有实体
+            _allEntities.Add(entity);
+
+            // 3. 顺便计算最小包围矩形 (MBR)
+            if (bounds.Left < minX) minX = bounds.Left;
+            if (bounds.Top < minY) minY = bounds.Top;
+            if (bounds.Right > maxX) maxX = bounds.Right;
+            if (bounds.Bottom > maxY) maxY = bounds.Bottom;
+            hasEntities = true;
+        });
+
+        // 更新最终边界
+        if (hasEntities) {
+            _contentBounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
+        } else {
+            _contentBounds = Rectangle.Empty;
+        }
+        
         world.Query(in query, (Entity entity, ref Visual vis) => {
             // 计算实体在世界中的实际矩形范围（基于左下角对齐逻辑反推左上角）
             Rectangle bounds = new(
