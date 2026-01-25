@@ -80,6 +80,20 @@ public static class InteractionSystem {
                 SpatialSystem.GetEntitiesInRect(SelectionRect.Value, QueryBuffer);
                 foreach (var entity in QueryBuffer) Map.SelectedEntities.Add(entity);
             }
+            if (_currentMode == Mode.Dragging) { // 拖拽结束后执行像素对齐
+                foreach (var entity in Map.SelectedEntities) {
+                    if (!entity.IsAlive()) continue;
+
+                    // 有父节点且父也被选中 → 跳过（防止重复 Snap）
+                    if (entity.Has<Hierarchy>()) {
+                        var parent = entity.Get<Hierarchy>().Parent;
+                        if (parent.HasValue && Map.SelectedEntities.Contains(parent.Value))
+                            continue;
+                    }
+
+                    SnapRecursive(entity);
+                }
+            }
 
             _currentMode = Mode.None;
             _selectionStart = null;
@@ -89,6 +103,11 @@ public static class InteractionSystem {
         _lastMouseWorldPos = worldMouse;
     }
 
+    /// <summary>
+    /// 递归地移动实体及其子孙
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <param name="delta"></param>
     private static void MoveRecursive(Entity entity, Vector2 delta) {
         if (!entity.IsAlive()) return;
 
@@ -105,7 +124,44 @@ public static class InteractionSystem {
             MoveRecursive(child, delta);
         }
     }
+    
+    /// <summary>
+    /// 递归地将实体及其子孙的位置对齐到像素网格
+    /// </summary>
+    /// <param name="entity"></param>
+    private static void SnapRecursive(Entity entity) {
+        if (!entity.IsAlive()) return;
 
+        if (entity.Has<Visual>()) {
+            ref var vis = ref entity.Get<Visual>();
+            vis.WorldPosition = SnapToPixel(vis.WorldPosition);
+        }
+
+        if (!entity.Has<Hierarchy>()) return;
+        ref var hier = ref entity.Get<Hierarchy>();
+
+        foreach (var child in hier.Children) {
+            SnapRecursive(child);
+        }
+    }
+
+    /// <summary>
+    /// 对齐到像素网格
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <returns></returns>
+    private static Vector2 SnapToPixel(Vector2 pos) {
+        return new Vector2(
+            MathF.Round(pos.X),
+            MathF.Round(pos.Y)
+        );
+    }
+
+
+    /// <summary>
+    /// 绘制选择框
+    /// </summary>
+    /// <param name="renderer"></param>
     public static void DrawSelectionMarquee(ScreenRenderer renderer) {
         if (_currentMode != Mode.Marquee || !SelectionRect.HasValue) return;
 
