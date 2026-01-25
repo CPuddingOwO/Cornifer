@@ -47,7 +47,7 @@ public static class Map {
             new Shadow {
                 SdfTexture = sdf,
                 Amount = shadowAmount,
-                Color = Color.DeepSkyBlue,
+                Color = Color.DeepPink,
                 Offset = new Vector2(-shadowAmount-1, -shadowAmount-1)
             }
         );

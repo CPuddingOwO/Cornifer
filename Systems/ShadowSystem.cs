@@ -13,7 +13,7 @@ public static class ShadowSystem {
     private static readonly Dictionary<(Texture2D tex, int pad), Texture2D> SdfCache = new();
 
     
-    public static void Draw(World world, CameraRenderer renderer) {
+    public static void Draw(World world, ScreenRenderer renderer) {
         foreach (Layer layer in Enum.GetValues(typeof(Layer))) {
             var query = new QueryDescription().WithAll<Visual, LayerMember, Shadow>();
             world.Query(in query, (ref Visual vis, ref LayerMember lm, ref Shadow sha) => {

@@ -106,18 +106,14 @@ public static class InteractionSystem {
         }
     }
 
-    public static void DrawSelectionMarquee(Renderer renderer) {
+    public static void DrawSelectionMarquee(ScreenRenderer renderer) {
         if (_currentMode != Mode.Marquee || !SelectionRect.HasValue) return;
 
         var rect = SelectionRect.Value;
-        var screenPos = renderer.TransformVector(new Vector2(rect.X, rect.Y));
-        var screenW = rect.Width * renderer.Scale;
-        var screenH = rect.Height * renderer.Scale;
-
-        if (renderer is not ScreenRenderer sr) return;
-        sr.SpriteBatch.Draw(Content.Tex.Pixel,
-            new Rectangle((int)screenPos.X, (int)screenPos.Y, (int)screenW, (int)screenH), Color.Cyan * 0.2f);
-        GizmoSystem.DrawHollowRect(renderer,
-            new Rectangle((int)screenPos.X, (int)screenPos.Y, (int)screenW, (int)screenH), Color.Cyan, 1);
+        Vector2 pos  = new(rect.X, rect.Y);
+        Vector2 size = new(rect.Width, rect.Height);
+        
+        renderer.SpriteBatch.Draw(Content.Tex.Pixel, rect, Color.Cyan * 0.2f);
+        GizmoSystem.DrawHollowRect(renderer, pos, size, Color.Cyan, 1);
     }
 }

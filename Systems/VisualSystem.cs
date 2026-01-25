@@ -6,10 +6,10 @@ using Microsoft.Xna.Framework;
 namespace Cornifer.Systems;
 
 public static class VisualSystem {
-    public static void Draw(World world, CameraRenderer renderer) {
+    public static void Draw(World world, ScreenRenderer renderer) {
         foreach (Layer layer in Enum.GetValues(typeof(Layer))) {
-            var query = new QueryDescription().WithAll<Visual, LayerMember, Shadow>();
-            world.Query(in query, (ref Visual vis, ref LayerMember lm, ref Shadow sha) => {
+            var query = new QueryDescription().WithAll<Visual, LayerMember>();
+            world.Query(in query, (ref Visual vis, ref LayerMember lm) => {
                 if (lm.Layer != layer || !vis.Visible) return;
 
                 // 左下角为原点 
@@ -19,16 +19,16 @@ public static class VisualSystem {
                     vis.WorldPosition.Y - (vis.Texture.Height - vis.LocalPosition.Y)
                 );
                 
-                // App.SpriteBatch.Draw(vis.Texture, drawPos, Color.White);
-                renderer.DrawTexture(
-                    vis.Texture, 
-                    drawPos, 
-                    source: null, 
-                    worldSize: null, // 如果需要缩放可以传 vis.Size
-                    color: Color.White, 
-                    origin: Vector2.Zero, 
-                    rotation: 0f
-                );
+                renderer.SpriteBatch.Draw(vis.Texture, drawPos, Color.White);
+                // renderer.DrawTexture(
+                //     vis.Texture, 
+                //     drawPos, 
+                //     source: null, 
+                //     worldSize: null, // 如果需要缩放可以传 vis.Size
+                //     color: Color.White, 
+                //     origin: Vector2.Zero, 
+                //     rotation: 0f
+                // );
             });
         }
     }

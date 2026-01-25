@@ -30,7 +30,8 @@ public static class ArchRegister {
         renderer.SpriteBatch.End();
 
         renderer.SpriteBatch.Begin(
-            samplerState: SamplerState.PointClamp);
+            samplerState: SamplerState.PointClamp,
+            transformMatrix: renderer.Transform);
         VisualSystem.Draw(Map.World, renderer); 
         GizmoSystem.Draw(renderer, Map.SelectedEntities);
         HierarchySystem.Draw(Map.World, renderer);
