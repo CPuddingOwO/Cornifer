@@ -90,9 +90,12 @@ public static class SpatialSystem {
         if (CandidateBuffer.Count == 0) return null;
 
         // 这里的排序逻辑应遵循 LayerMember 的层级顺序（从前向后）
-        return CandidateBuffer
+        var hit = CandidateBuffer
             .OrderByDescending(e => e.Get<LayerMember>().Layer) // 假设枚举值越大越靠前
             .FirstOrDefault(entity => IsPixelHit(entity, worldMousePos));
+        
+        if (hit.IsAlive()) return hit;
+        return null;
     }
 
     /// <summary>
