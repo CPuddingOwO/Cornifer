@@ -22,12 +22,15 @@ public struct Visual {
 public struct Shadow {
     // --- 已弃用 CPU 生成阴影方案 ShadowBaker ---
     // --- DEPRECATED CPU Shadow Baking Scheme ShadowBaker ---
-    public Texture2D? Texture;  // 阴影贴图: 自动生成 根据对应的 Visual.Texture
-    public Vector2 Offset;      // 阴影通常比原图大，所以渲染位置要偏移 -(shadowAmount)
+    // public Texture2D? Texture;  // 阴影贴图: 自动生成 根据对应的 Visual.Texture
+    // public Vector2 Offset;      // 阴影通常比原图大，所以渲染位置要偏移 -(shadowAmount)
     // --- END ---
     
-    public int Amount;          // 阴影扩展量
-    public int CornerRadius;    // 圆角半径
+    public int SdfMaxDistance;              // SDF最大距离
+    public Texture2D SdfTexture;            // SDF纹理
+    public int Amount;                      // 阴影扩展量
+    public Color Color;                     // 阴影颜色
+    public Vector2 Offset;   // 阴影偏移
 }
 
 // 父子关系

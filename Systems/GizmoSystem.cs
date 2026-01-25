@@ -35,11 +35,20 @@ public static class GizmoSystem {
             var screenOrigin = renderer.TransformVector(vis.WorldPosition);
             if (renderer is ScreenRenderer sr) {
                 sr.SpriteBatch.Draw(Content.Tex.Pixel, screenOrigin - new Vector2(3, 3),
-                    null, Color.Yellow, 0, Vector2.Zero, new Vector2(6, 6), default, 0);
+                null, Color.Yellow, 0, Vector2.Zero, new Vector2(6, 6), default, 0);
+                // === 画原点（世界空间）===
+                // sr.SpriteBatch.Draw(
+                    // texture: Content.Tex.Pixel,
+                    // position: vis.WorldPosition,
+                    // color: Color.Yellow
+                // );
             }
+            
+            
         }
     }
 
+    
     public static void DrawHollowRect(Renderer renderer, Rectangle rect, Color color, int thickness) {
         if (renderer is not ScreenRenderer sr) return;
 

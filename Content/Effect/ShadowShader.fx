@@ -1,47 +1,32 @@
-﻿sampler2D SpriteTextureSampler : register(s0);
+﻿sampler2D SdfTexture : register(s0);
 
-float2 TextureSize; 
-int ShadowSize;     
-float4 ShadowColor; 
-float CameraScale;
+float ShadowAmount;       // 阴影扩展量（像素）
+float4 ShadowColor;     // 阴影颜色 (RGBA)
+float2 TextureSize;     // 纹理尺寸
 
 struct VertexShaderOutput {
     float4 Position : SV_Position;
-    float4 Color : COLOR0;
-    float2 TextureCoordinates : TEXCOORD0;
+    float2 TexCoord : TEXCOORD0;
 };
 
-float4 ShadowPS(VertexShaderOutput input) : COLOR {
-    float texelWidth = 1.0 / TextureSize.x;
-    float texelHeight = 1.0 / TextureSize.y;
-    float fShadowSize = (float)ShadowSize;
+float4 PixelShaderPS(VertexShaderOutput input) : SV_Target {
 
-    float stepX = texelWidth * CameraScale;
-    float stepY = texelHeight * CameraScale;
+    // 采样 SDF（0.5 = 原始轮廓）
+    float sdf = tex2D(SdfTexture, input.TexCoord).r;
 
-    [loop]
-    for (int i = -16; i <= 16; i++) {
-        if (abs((float)i) <= fShadowSize) {
-            float2 offset = float2(i * stepX, 0);
-            float4 neighbor = tex2Dlod(SpriteTextureSampler, float4(input.TextureCoordinates + offset, 0, 0));
-            if (neighbor.a > 0) return ShadowColor;
-        }
-    }
-    
-    [loop]
-    for (int i = -16; i <= 16; i++) {
-        if (abs((float)i) <= fShadowSize) {
-            float2 offset = float2(0, i * stepY);
-            float4 neighbor = tex2Dlod(SpriteTextureSampler, float4(input.TextureCoordinates + offset, 0, 0));
-            if (neighbor.a > 0) return ShadowColor;
-        }
-    }
-   
-    discard;
-    return float4(0, 0, 0, 0);
+    // 转为像素距离（外部为正）
+    float dist = (sdf - 0.5) * ( ShadowAmount + 1 ) * 2.0;
+
+    // ★ 关键：硬判断是否在阴影范围内
+    if (dist > ShadowAmount) 
+        discard; // ← 不在阴影内，什么都别画
+       
+    // ★ 在阴影范围内：纯色，不衰减
+    return ShadowColor;
 }
 
-
 technique Shadow {
-    pass Fully { PixelShader = compile ps_3_0 ShadowPS(); }
+    pass Fully {
+        PixelShader = compile ps_3_0 PixelShaderPS();
+    }
 };

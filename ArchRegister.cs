@@ -8,7 +8,7 @@ using Vector2 = System.Numerics.Vector2;
 namespace Cornifer;
 
 public static class ArchRegister {
-    public static void Update() {
+    public static void Update(GameTime gt) {
         InteractionSystem.Update(App.WorldCamera);
         // 重建四叉树
         SpatialSystem.RebuildIndex(Map.World, new Rectangle(-10000, -10000, 20000, 20000));
@@ -21,8 +21,14 @@ public static class ArchRegister {
         device.SetRenderTarget(renderer.RenderTarget2D);
         device.Clear(Color.Transparent);
         
-        ShadowSystem.Draw(App.WorldCamera);
-        
+        renderer.SpriteBatch.Begin(
+            blendState: BlendState.AlphaBlend,
+            samplerState: SamplerState.PointClamp,
+            transformMatrix: renderer.Transform,
+            effect: Content.Ect.Shadow);
+        ShadowSystem.Draw(Map.World, renderer);
+        renderer.SpriteBatch.End();
+
         renderer.SpriteBatch.Begin(
             samplerState: SamplerState.PointClamp);
         VisualSystem.Draw(Map.World, renderer); 
