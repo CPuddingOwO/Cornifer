@@ -42,9 +42,11 @@ public class App : Game {
         Map.Initialize();
         _spriteBatch = new SpriteBatch(_graphicsManager.GraphicsDevice);
         WorldCamera = new CameraRenderer(_spriteBatch);
-        WorldCamera.UpdateBuffer(_graphicsManager.GraphicsDevice,
-            _graphicsManager.GraphicsDevice.Viewport.Bounds.Size.X,
-            _graphicsManager.GraphicsDevice.Viewport.Bounds.Size.Y);
+        var vp = _graphicsManager.GraphicsDevice.Viewport;
+        var vpSize = vp.Bounds.Size;
+        WorldCamera.UpdateBuffer(_graphicsManager.GraphicsDevice, vpSize.X, vpSize.Y);
+        
+        WorldCamera.Position = new Vector2(- vpSize.X / 2f, -vpSize.Y / 2f );
         CaptureSystem.Initialize(_spriteBatch);
         base.Initialize();
     }
