@@ -30,10 +30,12 @@ public static class Content {
         public static Texture2D Objects { get; internal set; } = default!;
         public static Texture2D SlugcatIcons { get; internal set; } = default!;
         public static Texture2D Pixel { get; internal set; } = default!;
+        public static Texture2D MiscSprites { get; internal set; } = default!;
 
         internal static void Load(ContentManager cm) {
             Objects = cm.Load<Texture2D>("Texture/Objects");
             SlugcatIcons = cm.Load<Texture2D>("Texture/SlugcatIcons");
+            MiscSprites = cm.Load<Texture2D>("Texture/MiscSprites");
             
             Pixel = new Texture2D(App.WorldCamera.SpriteBatch.GraphicsDevice,1, 1);
             Pixel.SetData([Color.White]);
@@ -65,11 +67,13 @@ public static class Content {
         }
     }
 
-    public static class Ect {
+    public static class Eft {
         public static Effect Shadow { get; internal set; } = null!;
+        public static Effect Grid { get; internal set; } = null!;
         
         internal static void Load(ContentManager cm) {
             Shadow = cm.Load<Effect>("Effect/ShadowShader");
+            Grid = cm.Load<Effect>("Effect/GridShader");
         }
     }
 
@@ -82,7 +86,7 @@ public static class Content {
         Tex.Load(content);
         Snd.Load(content);
         Cfg.Load(content);
-        Ect.Load(content);
+        Eft.Load(content);
     }
     
     static SpriteFont LoadManualSpritefont(string path) {
