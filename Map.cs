@@ -65,5 +65,8 @@ public static class Map {
             if (rand.Next(0, 2) != 0) continue;
             HierarchySystem.SetParent(e, Place($"Object_Child_{i}", new Vector2(randomPos.X+100, randomPos.Y+100), Content.Tex.SlugcatIcons, (Layer)rand.Next(0, 4)));
         }
+        
+        // 在原点放置一个中心物体
+        Place("Object_Center", Vector2.Zero, Content.Tex.MiscSprites);
     }
 }

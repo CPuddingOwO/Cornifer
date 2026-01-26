@@ -77,11 +77,15 @@ public static class Interface {
             IsHovered = ImGui.IsWindowHovered() || ImGui.IsAnyItemHovered();
             
             ImGui.Separator();
-
-            // 示例内容
+            
+            ImGui.BeginGroup();
+            ImGui.Text($"相机位置 ({App.WorldCamera.Position.X:F2}, {App.WorldCamera.Position.Y:F2})");
+            ImGui.Text($"相机缩放 {App.WorldCamera.Scale:F2}");
+            ImGui.EndGroup();
+            
             if (ImGui.CollapsingHeader("视图控制", ImGuiTreeNodeFlags.DefaultOpen)) {
                 if (ImGui.Button("重置相机")) {
-                    App.WorldCamera.Position = Vector2.Zero;
+                    App.WorldCamera.Position = new Vector2( -viewport.Size.X / 2f, -viewport.Size.Y / 2f );
                     App.WorldCamera.Scale = 1.0f;
                 }
             }
@@ -121,6 +125,7 @@ public static class Interface {
                     ImGui.BeginGroup();
                     ImGui.Text(entity.TryGet<Identifier>( out var id) ? $"对象 ID: {id.Name}" : "对象 ID: 未知");
                     ImGui.Text(entity.TryGet<LayerMember>( out var layer) ? $"图层: {layer.Layer}" : "图层: 未知");
+                    ImGui.Text(entity.TryGet<Visual>(out var visual) ? $"Position: ({visual.WorldPosition.X:F2}, {visual.WorldPosition.Y:F2})" : "Position: 未知");
                     ImGui.EndGroup();
                 }
                 
