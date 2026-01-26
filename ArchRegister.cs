@@ -24,8 +24,16 @@ public static class ArchRegister {
         renderer.SpriteBatch.Begin(
             blendState: BlendState.AlphaBlend,
             samplerState: SamplerState.PointClamp,
+            effect: Content.Eft.Grid
+        );
+        GridSystem.Draw(Map.World, renderer);
+        renderer.SpriteBatch.End();
+        
+        renderer.SpriteBatch.Begin(
+            blendState: BlendState.AlphaBlend,
+            samplerState: SamplerState.PointClamp,
             transformMatrix: renderer.Transform,
-            effect: Content.Ect.Shadow);
+            effect: Content.Eft.Shadow);
         ShadowSystem.Draw(Map.World, renderer);
         renderer.SpriteBatch.End();
 
