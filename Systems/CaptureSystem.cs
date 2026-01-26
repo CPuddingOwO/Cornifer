@@ -15,9 +15,16 @@ public static class CaptureSystem {
     
     public static Texture2D Capture() {
         var device = _renderer.SpriteBatch.GraphicsDevice;
-        var width = SpatialSystem.ContentBounds.Width;
-        var height = SpatialSystem.ContentBounds.Height;
+        var bounds = SpatialSystem.ContentBounds;
+        const int padding = 16; // 为捕获区域添加一些填充
+        var width = bounds.Width + padding * 2;
+        var height = bounds.Height + padding * 2;
         var buffer = new RenderTarget2D(device, width, height);
+        _renderer.Position = new Vector2(bounds.Left - padding, bounds.Top -padding);
+        _renderer.Scale = 1.0001f;
+        
+        _renderer.UpdateBuffer(device, width, height);
+        // var pixelPerfect = Matrix.CreateTranslation(-0.5f, -0.5f, 0) * _renderer.Transform;
         
         device.SetRenderTarget(buffer);
         device.Clear(Color.Transparent);
@@ -25,17 +32,23 @@ public static class CaptureSystem {
         _renderer.SpriteBatch.Begin(
             blendState: BlendState.AlphaBlend,
             samplerState: SamplerState.PointClamp,
+            // transformMatrix: pixelPerfect,
             transformMatrix: _renderer.Transform,
-            effect: Content.Ect.Shadow);
+            // transformMatrix: Matrix.Identity,
+            effect: Content.Eft.Shadow);
         ShadowSystem.Draw(Map.World, _renderer);
         _renderer.SpriteBatch.End();
         
         
-        _renderer.SpriteBatch.Begin(samplerState: SamplerState.PointClamp, blendState: BlendState.AlphaBlend);
+        _renderer.SpriteBatch.Begin(
+            samplerState: SamplerState.PointClamp, 
+            // transformMatrix: pixelPerfect,
+            transformMatrix: _renderer.Transform,
+            blendState: BlendState.AlphaBlend);
         VisualSystem.Draw(Map.World, _renderer);
+        
         _renderer.SpriteBatch.End();
 
-        // 重置渲染目标回默认
         device.SetRenderTarget(null);
 
         // 将 _buffer 的内容复制到一个新的 Texture2D
