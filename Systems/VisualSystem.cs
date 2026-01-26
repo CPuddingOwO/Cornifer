@@ -14,21 +14,12 @@ public static class VisualSystem {
 
                 // 左下角为原点 
                 // DrawPos.Y = World.Y - (Texture.H - Local.Y)
-                Vector2 drawPos = new(
+                var drawPos = new Vector2(
                     vis.WorldPosition.X - vis.LocalPosition.X,
                     vis.WorldPosition.Y - (vis.Texture.Height - vis.LocalPosition.Y)
                 );
                 
                 renderer.SpriteBatch.Draw(vis.Texture, drawPos, Color.White);
-                // renderer.DrawTexture(
-                //     vis.Texture, 
-                //     drawPos, 
-                //     source: null, 
-                //     worldSize: null, // 如果需要缩放可以传 vis.Size
-                //     color: Color.White, 
-                //     origin: Vector2.Zero, 
-                //     rotation: 0f
-                // );
             });
         }
     }
