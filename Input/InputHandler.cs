@@ -11,12 +11,12 @@ public static class InputHandler {
     public static KeyboardState KeyboardState, PrevKeyboardState;
     public static MouseState MouseState, PrevMouseState;
 
-    public static bool Disable => false;
+    public static bool Disable;
     public static Dictionary<string, Keybind> Keybinds = new();
 
     // 快捷获取坐标属性
     public static Point MousePoint => MouseState.Position;
-    public static Vector2 MousePosition => new Vector2(MouseState.X, MouseState.Y);
+    public static Vector2 MousePosition => new(MouseState.X, MouseState.Y);
     public static Vector2 MouseDelta => (MouseState.Position - PrevMouseState.Position).ToVector2();
 
     // Keybinds
@@ -40,6 +40,8 @@ public static class InputHandler {
     }
 
     public static void Update() {
+        Disable = !App.Instance.IsActive;
+        
         PrevMouseState = MouseState;
         MouseState = Mouse.GetState();
 
