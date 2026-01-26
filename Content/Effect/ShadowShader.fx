@@ -1,8 +1,8 @@
 ﻿sampler2D SdfTexture : register(s0);
 
-float ShadowAmount;       // 阴影扩展量（像素）
+float ShadowAmount;     // 阴影扩展量（像素）
 float4 ShadowColor;     // 阴影颜色 (RGBA)
-float2 TextureSize;     // 纹理尺寸
+// float2 TextureSize;     // 纹理尺寸 
 
 struct VertexShaderOutput {
     float4 Position : SV_Position;

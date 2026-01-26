@@ -27,28 +27,22 @@ public static class ShadowSystem {
                 );
 
                 drawPos += sha.Offset;
-
-                // 设置 Shader 参数
-                Content.Ect.Shadow.Parameters["SdfTexture"]?.SetValue(sha.SdfTexture);
-                Content.Ect.Shadow.Parameters["ShadowAmount"]?.SetValue((float)sha.Amount);
-                Content.Ect.Shadow.Parameters["ShadowColor"]?.SetValue(sha.Color.ToVector4());
-
-                Content.Ect.Shadow.Parameters["TextureSize"]?.SetValue(
-                    new Vector2(
-                        sha.SdfTexture.Width,
-                        sha.SdfTexture.Height
-                    )
-                );
+                
+                var effect = Content.Eft.Shadow;
+                effect.Parameters["SdfTexture"]?.SetValue(sha.SdfTexture);
+                effect.Parameters["ShadowAmount"]?.SetValue((float)sha.Amount);
+                effect.Parameters["ShadowColor"]?.SetValue(sha.Color.ToVector4());
+                // effect.Parameters["TextureSize"]?.SetValue(
+                //     new Vector2(
+                //         sha.SdfTexture.Width,
+                //         sha.SdfTexture.Height
+                //     )
+                // );
+                
                 renderer.SpriteBatch.Draw(
-                    sha.SdfTexture,
-                    drawPos,
-                    null,
-                    Color.White,
-                    0f,
-                    Vector2.Zero,
-                    1f,
-                    SpriteEffects.None,
-                    0f
+                    texture: sha.SdfTexture,
+                    position: drawPos,
+                    color: Color.White
                 );
             });
         }
