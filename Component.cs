@@ -30,7 +30,7 @@ public struct Shadow {
     public Texture2D SdfTexture;            // SDF纹理
     public int Amount;                      // 阴影扩展量
     public Color Color;                     // 阴影颜色
-    public Vector2 Offset;   // 阴影偏移
+    public Vector2 Offset;                  // 阴影偏移
 }
 
 // 父子关系
