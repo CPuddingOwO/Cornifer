@@ -1,6 +1,4 @@
-﻿using System;
-using Arch.Core;
-using Cornifer.Renderers;
+﻿using Cornifer.Renderers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -52,12 +50,12 @@ public static class CaptureSystem {
         device.SetRenderTarget(null);
 
         // 将 _buffer 的内容复制到一个新的 Texture2D
-        Texture2D capturedTexture = new(device, width, height);
+        Texture2D result = new(device, width, height);
         var data = new Color[width * height];
         buffer.GetData(data);
-        capturedTexture.SetData(data);
+        result.SetData(data);
         buffer.Dispose();
 
-        return capturedTexture;
+        return result;
     }
 }
