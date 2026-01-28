@@ -16,8 +16,8 @@ public static class GizmoSystem {
 
             // 1. 计算物体在世界空间中的左上角
             Vector2 worldDrawPos = new(
-                vis.WorldPosition.X - vis.LocalPosition.X,
-                vis.WorldPosition.Y - (vis.Texture.Height - vis.LocalPosition.Y)
+                vis.WorldPosition.X - vis.OriginOffset.X,
+                vis.WorldPosition.Y - (vis.Texture.Height - vis.OriginOffset.Y)
             );
 
             // 注意：这里的厚度 thickness 设为 2，它在屏幕上永远是 2 像素，不会随缩放变粗

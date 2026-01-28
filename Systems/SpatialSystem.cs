@@ -37,8 +37,8 @@ public static class SpatialSystem {
         var query = new QueryDescription().WithAll<Visual>();
         world.Query(in query, (Entity entity, ref Visual vis) => {
             Rectangle bounds = new(
-                (int)(vis.WorldPosition.X - vis.LocalPosition.X),
-                (int)(vis.WorldPosition.Y - (vis.Texture.Height - vis.LocalPosition.Y)),
+                (int)(vis.WorldPosition.X - vis.OriginOffset.X),
+                (int)(vis.WorldPosition.Y - (vis.Texture.Height - vis.OriginOffset.Y)),
                 vis.Texture.Width,
                 vis.Texture.Height
             );
@@ -67,8 +67,8 @@ public static class SpatialSystem {
         world.Query(in query, (Entity entity, ref Visual vis) => {
             // 计算实体在世界中的实际矩形范围（基于左下角对齐逻辑反推左上角）
             Rectangle bounds = new(
-                (int)(vis.WorldPosition.X - vis.LocalPosition.X),
-                (int)(vis.WorldPosition.Y - (vis.Texture.Height - vis.LocalPosition.Y)),
+                (int)(vis.WorldPosition.X - vis.OriginOffset.X),
+                (int)(vis.WorldPosition.Y - (vis.Texture.Height - vis.OriginOffset.Y)),
                 vis.Texture.Width,
                 vis.Texture.Height
             );
@@ -128,8 +128,8 @@ public static class SpatialSystem {
 
         // 计算实体的世界空间边界矩形
         Rectangle entityBounds = new(
-            (int)(vis.WorldPosition.X - vis.LocalPosition.X),
-            (int)(vis.WorldPosition.Y - (vis.Texture.Height - vis.LocalPosition.Y)),
+            (int)(vis.WorldPosition.X - vis.OriginOffset.X),
+            (int)(vis.WorldPosition.Y - (vis.Texture.Height - vis.OriginOffset.Y)),
             vis.Texture.Width,
             vis.Texture.Height
         );
@@ -165,8 +165,8 @@ public static class SpatialSystem {
         // 1. 将世界坐标转回纹理局部坐标 (Local Space)
         // 计算公式推导：worldPos.X = drawPos.X + localX
         // 所以：localX = worldPos.X - (vis.WorldPos.X - vis.LocalPos.X)
-        float localX = worldPos.X - (vis.WorldPosition.X - vis.LocalPosition.X);
-        float localY = worldPos.Y - (vis.WorldPosition.Y - (vis.Texture.Height - vis.LocalPosition.Y));
+        float localX = worldPos.X - (vis.WorldPosition.X - vis.OriginOffset.X);
+        float localY = worldPos.Y - (vis.WorldPosition.Y - (vis.Texture.Height - vis.OriginOffset.Y));
 
         int texX = (int)localX;
         int texY = (int)localY;

@@ -40,7 +40,7 @@ public static class Map {
                 Texture = tex,
                 Visible = true,
                 WorldPosition = worldPos,
-                LocalPosition = new Vector2(tex.Width / 2f, tex.Height / 2f)
+                OriginOffset = new Vector2(MathF.Round(tex.Width / 2f), MathF.Round(tex.Height / 2f)),
             },
             new Hierarchy(),
             new LayerMember { Layer = layer, Locked = false },
@@ -63,7 +63,12 @@ public static class Map {
             var randomPos = new Vector2(rand.Next(-1000, 1000), rand.Next(-1000, 1000));
             var e = Place($"Object_{i}", randomPos, tex, (Layer)rand.Next(0, 4));
             if (rand.Next(0, 2) != 0) continue;
-            HierarchySystem.SetParent(e, Place($"Object_Child_{i}", new Vector2(randomPos.X+100, randomPos.Y+100), Content.Tex.SlugcatIcons, (Layer)rand.Next(0, 4)));
+            HierarchySystem.SetParent(
+                e, 
+                Place($"Object_Child_{i}", new Vector2(randomPos.X+100, randomPos.Y+100), Content.Tex.SlugcatIcons, (Layer)rand.Next(0, 4)), 
+                Vector2.Zero,
+                Vector2.Zero
+                );
         }
         
         // 在原点放置一个中心物体
