@@ -40,7 +40,7 @@ public static class Interface {
                 io.Fonts.Clear();
 
                 // 传入配置进行加载
-                io.Fonts.AddFontFromFileTTF(fontPath, 32, fontConfig, io.Fonts.GetGlyphRangesChineseFull());
+                io.Fonts.AddFontFromFileTTF(fontPath, 32, fontConfig, io.Fonts.GetGlyphRangesChineseSimplifiedCommon());
 
                 // 重建图集
                 _renderer.RebuildFontAtlas();
