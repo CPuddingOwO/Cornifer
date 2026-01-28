@@ -16,7 +16,10 @@ public static class ArchRegister {
     public static void Draw(CameraRenderer renderer) {
         var device = renderer.SpriteBatch.GraphicsDevice;
         
-        device.SetRenderTarget(renderer.RenderTarget2D);
+        // device.SetRenderTarget(renderer.RenderTarget2D);
+        // device.Clear(Color.Transparent);
+        
+        device.SetRenderTarget(null);
         device.Clear(Color.Transparent);
         
         renderer.SpriteBatch.Begin(
@@ -44,13 +47,13 @@ public static class ArchRegister {
         InteractionSystem.DrawSelectionMarquee(renderer);
         renderer.SpriteBatch.End();
         
-        device.SetRenderTarget(null);
-        
-        device.Clear(Color.CornflowerBlue);
-        renderer.SpriteBatch.Begin(
-            samplerState: SamplerState.PointClamp, 
-            blendState: BlendState.AlphaBlend);
-        renderer.SpriteBatch.Draw(renderer.RenderTarget2D, Vector2.Zero, Color.White);
-        renderer.SpriteBatch.End();
+        // device.SetRenderTarget(null);
+        // device.Clear(Color.CornflowerBlue);
+        //
+        // renderer.SpriteBatch.Begin(
+        //     samplerState: SamplerState.PointClamp, 
+        //     blendState: BlendState.AlphaBlend);
+        // renderer.SpriteBatch.Draw(renderer.RenderTarget2D, Vector2.Zero, Color.White);
+        // renderer.SpriteBatch.End();
     }
 }

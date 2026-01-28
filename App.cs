@@ -30,9 +30,9 @@ public class App : Game {
         Window.AllowUserResizing = true; 
         Window.ClientSizeChanged += (s, e) => {
             // 更新摄像机的投影矩阵
-            WorldCamera.UpdateBuffer(WorldCamera.SpriteBatch.GraphicsDevice,
-                _graphicsManager.GraphicsDevice.Viewport.Bounds.Size.X,
-                _graphicsManager.GraphicsDevice.Viewport.Bounds.Size.Y);
+            // WorldCamera.UpdateBuffer(WorldCamera.SpriteBatch.GraphicsDevice,
+            //     _graphicsManager.GraphicsDevice.Viewport.Bounds.Size.X,
+            //     _graphicsManager.GraphicsDevice.Viewport.Bounds.Size.Y);
             WorldCamera.Size = _graphicsManager.GraphicsDevice.Viewport.Bounds.Size.ToVector2();
         };
     }
@@ -44,7 +44,7 @@ public class App : Game {
         WorldCamera = new CameraRenderer(_spriteBatch);
         var vp = _graphicsManager.GraphicsDevice.Viewport;
         var vpSize = vp.Bounds.Size;
-        WorldCamera.UpdateBuffer(_graphicsManager.GraphicsDevice, vpSize.X, vpSize.Y);
+        // WorldCamera.UpdateBuffer(_graphicsManager.GraphicsDevice, vpSize.X, vpSize.Y);
         
         WorldCamera.Position = new Vector2(- vpSize.X / 2f, -vpSize.Y / 2f );
         CaptureSystem.Initialize(_spriteBatch);
