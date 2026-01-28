@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using Arch.Core;
 using Arch.Core.Extensions;
 using Cornifer.Input;
 using MonoGame.ImGuiNet;
@@ -20,6 +19,7 @@ public static class Interface {
     public static void Initialize() {
         _renderer = new ImGuiRenderer(App.Instance);
         var io = ImGui.GetIO();
+        io.IniSavingRate = 0f; // 禁用自动保存 imgui.ini 文件
 
         string fontPath = Path.Combine(App.AppLocation, "Content/Font/MapleMonoNormalNL-NF-CN-Regular.ttf");
 
@@ -121,11 +121,14 @@ public static class Interface {
                 }
                 
                 foreach (var entity in Map.SelectedEntities) {
+                    var v = entity.Get<Visual>();
                     ArchInspector.Draw(entity);
                     ImGui.BeginGroup();
+                    ImGui.Separator();
                     ImGui.Text(entity.TryGet<Identifier>( out var id) ? $"对象 ID: {id.Name}" : "对象 ID: 未知");
                     ImGui.Text(entity.TryGet<LayerMember>( out var layer) ? $"图层: {layer.Layer}" : "图层: 未知");
-                    ImGui.Text(entity.TryGet<Visual>(out var visual) ? $"Position: ({visual.WorldPosition.X:F2}, {visual.WorldPosition.Y:F2})" : "Position: 未知");
+                    ImGui.Text($"WPos: ({v.WorldPosition.X:F2}, {v.WorldPosition.Y:F2})");
+                    ImGui.Text($"LPos: {v.OriginOffset.X:F2}, {v.OriginOffset.Y:F2})");
                     ImGui.EndGroup();
                 }
                 
@@ -137,6 +140,6 @@ public static class Interface {
         }
 
         // ImGui.ShowStyleEditor();
-        // ImGui.ShowDemoWindow();
+        ImGui.ShowDemoWindow();
     }
 }
