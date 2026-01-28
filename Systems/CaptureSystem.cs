@@ -19,10 +19,9 @@ public static class CaptureSystem {
         var height = bounds.Height + padding * 2;
         var buffer = new RenderTarget2D(device, width, height);
         _renderer.Position = new Vector2(bounds.Left - padding, bounds.Top -padding);
-        _renderer.Scale = 1.0001f;
+        _renderer.Scale = 1f;
         
         _renderer.UpdateBuffer(device, width, height);
-        // var pixelPerfect = Matrix.CreateTranslation(-0.5f, -0.5f, 0) * _renderer.Transform;
         
         device.SetRenderTarget(buffer);
         device.Clear(Color.Transparent);

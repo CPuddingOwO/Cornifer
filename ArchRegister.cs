@@ -1,9 +1,7 @@
-﻿using System.Numerics;
-using Cornifer.Renderers;
+﻿using Cornifer.Renderers;
 using Cornifer.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Vector2 = System.Numerics.Vector2;
 
 namespace Cornifer;
 
@@ -52,8 +50,7 @@ public static class ArchRegister {
         renderer.SpriteBatch.Begin(
             samplerState: SamplerState.PointClamp, 
             blendState: BlendState.AlphaBlend);
-        renderer.SpriteBatch.Draw(renderer.RenderTarget2D, Vector2.Zero, Color.White); 
+        renderer.SpriteBatch.Draw(renderer.RenderTarget2D, Vector2.Zero, Color.White);
         renderer.SpriteBatch.End();
-        
     }
 }
