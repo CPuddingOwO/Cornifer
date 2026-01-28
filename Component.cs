@@ -26,7 +26,10 @@ public struct Shadow {
 
 public struct Hierarchy() {
     public Entity? Parent = null;
-    public List<Entity> Children = [];
+    public readonly List<Entity> Children = [];
+    
+    public Vector2 SourceOffset = Vector2.Zero; // 父物体上连线的本地位置
+    public Vector2 TargetOffset = Vector2.Zero; // 子物体上连线的本地位置
 }
 
 public struct LayerMember {
