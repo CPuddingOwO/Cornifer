@@ -1,38 +1,39 @@
-﻿using Microsoft.Win32;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.Win32;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace Cornifer;
 
 public static class Platform {
+    private const int RegistryDataVersion = 1;
+    private const string OpenWebMapProtocol = "cornifer://openweb/";
     private static readonly HttpClient HttpClient = new();
 
     private static readonly WindowsInteractionTaskScheduler Scheduler = new();
     private static IWin32Window? _gameWindow;
-    private static bool _detachedWindow = false;
+    private static readonly bool _detachedWindow = false;
 
     private static Task<Stream?>? _startupStateStream;
     private static string? _startupStatePath;
 
-    private const int RegistryDataVersion = 1;
-    private const string OpenWebMapProtocol = "cornifer://openweb/";
-
     /// <summary>
-    /// 初始化并处理启动参数与注册表
+    ///     初始化并处理启动参数与注册表
     /// </summary>
     public static void Start(string[] args) {
         if (args.Length >= 1) {
-            string arg = args[0];
+            var arg = args[0];
             if (arg.StartsWith(OpenWebMapProtocol)) {
                 _startupStateStream = DownloadWebMapAsync(arg);
             } else if (File.Exists(arg)) {
@@ -46,7 +47,7 @@ public static class Platform {
 
     private static async Task<Stream?> DownloadWebMapAsync(string protocolUrl) {
         try {
-            string url = $"https://{protocolUrl[OpenWebMapProtocol.Length..]}";
+            var url = $"https://{protocolUrl[OpenWebMapProtocol.Length..]}";
             var response = await HttpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
             response.EnsureSuccessStatusCode();
 
@@ -63,7 +64,7 @@ public static class Platform {
     private static void EnsureRegistryRegistered() {
         // 尝试写入。如果失败，可能是权限问题
         try {
-            string? exePath = Process.GetCurrentProcess().MainModule?.FileName;
+            var exePath = Process.GetCurrentProcess().MainModule?.FileName;
             if (exePath is null) return;
 
             // 优先检查 HKLM (或 ClassesRoot)，如果没权限则尝试写入当前用户 (HKCU)
@@ -93,15 +94,72 @@ public static class Platform {
             protCmdKey.SetValue("", $"\"{exePath}\" \"%1\"");
         } catch (UnauthorizedAccessException) {
             // 如果 HKCU 都没权限（极少见），再提示用户
-            if (!File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "noAdminWarning.txt"))) {
+            if (!File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "noAdminWarning.txt")))
                 _ = MessageBox("无法更新注册表关联，请尝试以管理员身份运行。", "权限提醒");
-            }
         }
     }
 
     public static async Task<(Stream? stream, string? saveFileName)> GetStartupStateFileStream() {
         if (_startupStateStream is null) return (null, null);
         return (await _startupStateStream, _startupStatePath);
+    }
+
+    private static IWin32Window? GetGameWindow() {
+        if (_detachedWindow) return null;
+        var handle = Process.GetCurrentProcess().MainWindowHandle;
+        return handle == 0 ? null : _gameWindow ??= new WindowHandle(handle);
+    }
+
+    public static void Stop() {
+        Scheduler.Dispose();
+    }
+
+    // 使用 C# 12 语法简化内部类
+    private sealed class WindowHandle(nint handle) : IWin32Window {
+        public IntPtr Handle => handle;
+    }
+
+    /// <summary>
+    ///     专用的 STA 线程调度器，处理 WinForms 所有交互
+    /// </summary>
+    private sealed class WindowsInteractionTaskScheduler : TaskScheduler, IDisposable {
+        private readonly BlockingCollection<Task> _tasks = new();
+        private readonly Thread _thread;
+
+        public WindowsInteractionTaskScheduler() {
+            _thread = new Thread(Loop) { IsBackground = true, Name = "STA_WinForms_Thread" };
+            _thread.SetApartmentState(ApartmentState.STA);
+            _thread.Start();
+        }
+
+        public void Dispose() {
+            _tasks.CompleteAdding();
+            _thread.Join(500);
+        }
+
+        private void Loop() {
+            foreach (var task in _tasks.GetConsumingEnumerable()) TryExecuteTask(task);
+        }
+
+        public Task<T> Schedule<T>(Func<T> func) {
+            return Task.Factory.StartNew(func, CancellationToken.None, TaskCreationOptions.None, this);
+        }
+
+        public Task Schedule(Action action) {
+            return Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.None, this);
+        }
+
+        protected override void QueueTask(Task task) {
+            _tasks.Add(task);
+        }
+
+        protected override bool TryExecuteTaskInline(Task task, bool wasQueued) {
+            return false;
+        }
+
+        protected override IEnumerable<Task> GetScheduledTasks() {
+            return _tasks;
+        }
     }
 
     #region WinForms Interactions
@@ -155,8 +213,8 @@ public static class Platform {
         var ms = new MemoryStream();
         using var writer = new BinaryWriter(ms);
 
-        int headerSize = 40; // BITMAPINFOHEADER
-        int dataSize = image.Width * image.Height * 4;
+        var headerSize = 40; // BITMAPINFOHEADER
+        var dataSize = image.Width * image.Height * 4;
 
         writer.Write(headerSize);
         writer.Write(image.Width);
@@ -176,7 +234,7 @@ public static class Platform {
         writer.Write(0x000000FF);
 
         // 像素转换
-        byte[] pixelData = new byte[dataSize];
+        var pixelData = new byte[dataSize];
         image.CopyPixelDataTo(pixelData);
         writer.Write(pixelData);
 
@@ -185,17 +243,17 @@ public static class Platform {
     }
 
     private static unsafe Bitmap ConvertToBitmap(Image<Rgba32> image) {
-        var bmp = new Bitmap(image.Width, image.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-        var rect = new System.Drawing.Rectangle(0, 0, image.Width, image.Height);
-        var data = bmp.LockBits(rect, System.Drawing.Imaging.ImageLockMode.WriteOnly, bmp.PixelFormat);
+        var bmp = new Bitmap(image.Width, image.Height, PixelFormat.Format32bppArgb);
+        var rect = new Rectangle(0, 0, image.Width, image.Height);
+        var data = bmp.LockBits(rect, ImageLockMode.WriteOnly, bmp.PixelFormat);
 
         try {
             // 计算总字节数
-            int totalBytes = image.Width * image.Height * 4;
+            var totalBytes = image.Width * image.Height * 4;
 
             // 使用 Span 直接指向 Bitmap 的内存地址
             // data.Scan0.ToPointer() 获取 void* 指针
-            Span<byte> destination = new Span<byte>(data.Scan0.ToPointer(), totalBytes);
+            var destination = new Span<byte>(data.Scan0.ToPointer(), totalBytes);
 
             // ImageSharp 内置的高效拷贝
             image.CopyPixelDataTo(destination);
@@ -208,54 +266,6 @@ public static class Platform {
     }
 
     #endregion
-
-    private static IWin32Window? GetGameWindow() {
-        if (_detachedWindow) return null;
-        nint handle = Process.GetCurrentProcess().MainWindowHandle;
-        return handle == 0 ? null : _gameWindow ??= new WindowHandle(handle);
-    }
-
-    public static void Stop() => Scheduler.Dispose();
-
-    // 使用 C# 12 语法简化内部类
-    private sealed class WindowHandle(nint handle) : IWin32Window {
-        public IntPtr Handle => handle;
-    }
-
-    /// <summary>
-    /// 专用的 STA 线程调度器，处理 WinForms 所有交互
-    /// </summary>
-    private sealed class WindowsInteractionTaskScheduler : TaskScheduler, IDisposable {
-        private readonly BlockingCollection<Task> _tasks = new();
-        private readonly Thread _thread;
-
-        public WindowsInteractionTaskScheduler() {
-            _thread = new Thread(Loop) { IsBackground = true, Name = "STA_WinForms_Thread" };
-            _thread.SetApartmentState(ApartmentState.STA);
-            _thread.Start();
-        }
-
-        private void Loop() {
-            foreach (var task in _tasks.GetConsumingEnumerable()) {
-                TryExecuteTask(task);
-            }
-        }
-
-        public Task<T> Schedule<T>(Func<T> func) =>
-            Task.Factory.StartNew(func, CancellationToken.None, TaskCreationOptions.None, this);
-
-        public Task Schedule(Action action) =>
-            Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.None, this);
-
-        protected override void QueueTask(Task task) => _tasks.Add(task);
-        protected override bool TryExecuteTaskInline(Task task, bool wasQueued) => false;
-        protected override IEnumerable<Task> GetScheduledTasks() => _tasks;
-
-        public void Dispose() {
-            _tasks.CompleteAdding();
-            _thread.Join(500);
-        }
-    }
 }
 
 public enum MessageBoxButtons {

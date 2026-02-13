@@ -1,11 +1,8 @@
-﻿using System;
-using Arch.Core;
-using ImGuiNET;
+﻿using Arch.Core;
 
 namespace Cornifer;
 
 public static class ArchInspector {
     public static void Draw(Entity entity) {
-        
     }
 }

@@ -140,3 +140,4 @@
 //             ArrayPool<bool>.Shared.Return(shadowPattern);
 //     }
 // }
+

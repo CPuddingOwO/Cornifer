@@ -18,7 +18,7 @@ public static class VisualSystem {
                     vis.WorldPosition.X - vis.OriginOffset.X,
                     vis.WorldPosition.Y - (vis.Texture.Height - vis.OriginOffset.Y)
                 );
-                
+
                 renderer.SpriteBatch.Draw(vis.Texture, drawPos, Color.White);
             });
         }

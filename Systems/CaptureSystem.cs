@@ -6,11 +6,11 @@ namespace Cornifer.Systems;
 
 public static class CaptureSystem {
     private static ScreenRenderer _renderer = null!;
-    
+
     public static void Initialize(SpriteBatch spriteBatch) {
         _renderer = new ScreenRenderer(spriteBatch);
     }
-    
+
     public static Texture2D Capture() {
         var device = _renderer.SpriteBatch.GraphicsDevice;
         var bounds = SpatialSystem.ContentBounds;
@@ -18,14 +18,14 @@ public static class CaptureSystem {
         var width = bounds.Width + padding * 2;
         var height = bounds.Height + padding * 2;
         var buffer = new RenderTarget2D(device, width, height);
-        _renderer.Position = new Vector2(bounds.Left - padding, bounds.Top -padding);
+        _renderer.Position = new Vector2(bounds.Left - padding, bounds.Top - padding);
         _renderer.Scale = 1f;
-        
+
         _renderer.UpdateBuffer(device, width, height);
-        
+
         device.SetRenderTarget(buffer);
         device.Clear(Color.Transparent);
-        
+
         _renderer.SpriteBatch.Begin(
             blendState: BlendState.AlphaBlend,
             samplerState: SamplerState.PointClamp,
@@ -35,15 +35,15 @@ public static class CaptureSystem {
             effect: Content.Eft.Shadow);
         ShadowSystem.Draw(Map.World, _renderer);
         _renderer.SpriteBatch.End();
-        
-        
+
+
         _renderer.SpriteBatch.Begin(
-            samplerState: SamplerState.PointClamp, 
+            samplerState: SamplerState.PointClamp,
             // transformMatrix: pixelPerfect,
             transformMatrix: _renderer.Transform,
             blendState: BlendState.AlphaBlend);
         VisualSystem.Draw(Map.World, _renderer);
-        
+
         _renderer.SpriteBatch.End();
 
         device.SetRenderTarget(null);

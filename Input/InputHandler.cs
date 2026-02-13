@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Xna.Framework;
@@ -14,11 +13,6 @@ public static class InputHandler {
     public static bool Disable;
     public static Dictionary<string, Keybind> Keybinds = new();
 
-    // 快捷获取坐标属性
-    public static Point MousePoint => MouseState.Position;
-    public static Vector2 MousePosition => new(MouseState.X, MouseState.Y);
-    public static Vector2 MouseDelta => (MouseState.Position - PrevMouseState.Position).ToVector2();
-
     // Keybinds
     public static readonly Keybind Undo = new("Undo", ModifierKeys.Control, Keys.Z);
     public static readonly Keybind Redo = new("Redo", ModifierKeys.Control, Keys.Y);
@@ -27,21 +21,24 @@ public static class InputHandler {
     public static readonly Keybind MoveEntity = new("MoveEntity", MouseKeys.LeftButton);
     public static readonly Keybind MoveCamera = new("MoveCamera", MouseKeys.RightButton);
     public static readonly Keybind DeleteEntity = new("Delete", Keys.Delete);
-    
+
+    // 快捷获取坐标属性
+    public static Point MousePoint => MouseState.Position;
+    public static Vector2 MousePosition => new(MouseState.X, MouseState.Y);
+    public static Vector2 MouseDelta => (MouseState.Position - PrevMouseState.Position).ToVector2();
 
 
     public static void Initialize() {
         // 自动注册静态字段中的 Keybind
         var fields = typeof(InputHandler).GetFields(BindingFlags.Public | BindingFlags.Static);
-        foreach (var f in fields.Where(f => f.FieldType == typeof(Keybind))) {
+        foreach (var f in fields.Where(f => f.FieldType == typeof(Keybind)))
             Keybinds[f.Name] = (Keybind)f.GetValue(null)!;
-        }
         // LoadKeybinds();
     }
 
     public static void Update() {
         Disable = !App.Instance.IsActive;
-        
+
         PrevMouseState = MouseState;
         MouseState = Mouse.GetState();
 

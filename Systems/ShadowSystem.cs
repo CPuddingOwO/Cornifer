@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Arch.Core;
 using Cornifer.Renderers;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Cornifer.Systems;
 
 public static class ShadowSystem {
     private static readonly Dictionary<(Texture2D tex, int pad), Texture2D> SdfCache = new();
 
-    
+
     public static void Draw(World world, ScreenRenderer renderer) {
         foreach (Layer layer in Enum.GetValues(typeof(Layer))) {
             var query = new QueryDescription().WithAll<Visual, LayerMember, Shadow>();
@@ -27,7 +25,7 @@ public static class ShadowSystem {
                 );
 
                 drawPos += sha.Offset;
-                
+
                 var effect = Content.Eft.Shadow;
                 effect.Parameters["SdfTexture"]?.SetValue(sha.SdfTexture);
                 effect.Parameters["ShadowAmount"]?.SetValue((float)sha.Amount);
@@ -38,18 +36,18 @@ public static class ShadowSystem {
                 //         sha.SdfTexture.Height
                 //     )
                 // );
-                
+
                 renderer.SpriteBatch.Draw(
-                    texture: sha.SdfTexture,
-                    position: drawPos,
-                    color: Color.White
+                    sha.SdfTexture,
+                    drawPos,
+                    Color.White
                 );
             });
         }
     }
 
     /// <summary>
-    /// 从 Alpha 贴图生成 SDF（Signed Distance Field）
+    ///     从 Alpha 贴图生成 SDF（Signed Distance Field）
     /// </summary>
     private static void GenerateSdf(Color[] pixels, int width, int height, float padding) {
         var length = width * height;
@@ -58,41 +56,38 @@ public static class ShadowSystem {
         var distance = new float[length];
 
         // 1. 初始化
-        for (var i = 0; i < length; i++) {
+        for (var i = 0; i < length; i++)
             // 内部：负距离
             distance[i] = pixels[i].A > 0 ? -padding : padding;
-        }
 
         var radius = (int)MathF.Ceiling(padding);
 
         // 2. 对每个像素，寻找最近的“反相像素”
-        for (var y = 0; y < height; y++) {
-            for (var x = 0; x < width; x++) {
-                var index = y * width + x;
-                var inside = pixels[index].A > 0;
+        for (var y = 0; y < height; y++)
+        for (var x = 0; x < width; x++) {
+            var index = y * width + x;
+            var inside = pixels[index].A > 0;
 
-                var best = MathF.Abs(distance[index]);
+            var best = MathF.Abs(distance[index]);
 
-                for (var oy = -radius; oy <= radius; oy++) {
-                    for (var ox = -radius; ox <= radius; ox++) {
-                        var nx = x + ox;
-                        var ny = y + oy;
+            for (var oy = -radius; oy <= radius; oy++)
+            for (var ox = -radius; ox <= radius; ox++) {
+                var nx = x + ox;
+                var ny = y + oy;
 
-                        if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
+                if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue;
 
-                        var nIndex = ny * width + nx;
-                        var nInside = pixels[nIndex].A > 0;
+                var nIndex = ny * width + nx;
+                var nInside = pixels[nIndex].A > 0;
 
-                        if (inside == nInside) continue;
+                if (inside == nInside) continue;
 
-                        var d = MathF.Sqrt(ox * ox + oy * oy);
-                        if (d < best)
-                            best = d;
-                    }
-                }
-
-                distance[index] = inside ? -best : best;
+                var d = MathF.Sqrt(ox * ox + oy * oy);
+                if (d < best)
+                    best = d;
             }
+
+            distance[index] = inside ? -best : best;
         }
 
         // 3. 归一化并写回 pixels
@@ -127,7 +122,7 @@ public static class ShadowSystem {
         // 把原图拷贝到中间
         for (var y = 0; y < srcH; y++)
         for (var x = 0; x < srcW; x++)
-            pixels[(y + padding) * w + (x + padding)] =
+            pixels[(y + padding) * w + x + padding] =
                 srcPixels[y * srcW + x];
 
         // 在 padded 图上生成 SDF
@@ -142,7 +137,7 @@ public static class ShadowSystem {
 
         return sdfTex;
     }
-    
+
     public static Texture2D GetOrCreateSdf(Texture2D source, int padding) {
         var key = (source, padding);
 
@@ -153,5 +148,4 @@ public static class ShadowSystem {
         SdfCache[key] = sdf;
         return sdf;
     }
-
 }

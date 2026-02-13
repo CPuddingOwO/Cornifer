@@ -1,11 +1,11 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System.Collections.Generic;
 
 namespace Cornifer.Helpers;
 
 /// <summary>
-/// 提供贴图像素数据的快速访问缓存，避免频繁的 GPU 内存回读。
+///     提供贴图像素数据的快速访问缓存，避免频繁的 GPU 内存回读。
 /// </summary>
 public static class TextureCache {
     private static readonly Dictionary<Texture2D, Color[]> Data = new();

@@ -1,15 +1,14 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using System;
+﻿using System;
 using Cornifer.Input;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace Cornifer.Renderers;
 
 public class CameraRenderer(SpriteBatch spriteBatch) : ScreenRenderer(spriteBatch) {
-    private bool Dragging { get; set; }
-
     private Vector2 _dragPos;
     private int _wheelValue;
+    private bool Dragging { get; set; }
 
     public void Update() {
         var state = InputHandler.MouseState;

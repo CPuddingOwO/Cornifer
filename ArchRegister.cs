@@ -12,16 +12,16 @@ public static class ArchRegister {
         SpatialSystem.RebuildIndex(Map.World, new Rectangle(-10000, -10000, 20000, 20000));
         HierarchySystem.Update(Map.World);
     }
-    
+
     public static void Draw(CameraRenderer renderer) {
         var device = renderer.SpriteBatch.GraphicsDevice;
-        
+
         // device.SetRenderTarget(renderer.RenderTarget2D);
         // device.Clear(Color.Transparent);
-        
+
         device.SetRenderTarget(null);
         device.Clear(Color.Transparent);
-        
+
         renderer.SpriteBatch.Begin(
             blendState: BlendState.AlphaBlend,
             samplerState: SamplerState.PointClamp,
@@ -29,7 +29,7 @@ public static class ArchRegister {
         );
         GridSystem.Draw(Map.World, renderer);
         renderer.SpriteBatch.End();
-        
+
         renderer.SpriteBatch.Begin(
             blendState: BlendState.AlphaBlend,
             samplerState: SamplerState.PointClamp,
@@ -41,12 +41,12 @@ public static class ArchRegister {
         renderer.SpriteBatch.Begin(
             samplerState: SamplerState.PointClamp,
             transformMatrix: renderer.Transform);
-        VisualSystem.Draw(Map.World, renderer); 
+        VisualSystem.Draw(Map.World, renderer);
         GizmoSystem.Draw(renderer, Map.SelectedEntities);
         HierarchySystem.Draw(Map.World, renderer);
         InteractionSystem.DrawSelectionMarquee(renderer);
         renderer.SpriteBatch.End();
-        
+
         // device.SetRenderTarget(null);
         // device.Clear(Color.CornflowerBlue);
         //

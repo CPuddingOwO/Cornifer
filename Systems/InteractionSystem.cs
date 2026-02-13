@@ -10,13 +10,11 @@ using Microsoft.Xna.Framework.Input;
 namespace Cornifer.Systems;
 
 public static class InteractionSystem {
-    private enum Mode { None, Dragging, Marquee }
-
     private static Mode _currentMode = Mode.None;
     private static Vector2? _selectionStart;
-    public static Rectangle? SelectionRect { get; private set; }
     private static Vector2 _lastMouseWorldPos;
     private static readonly List<Entity> QueryBuffer = new(128);
+    public static Rectangle? SelectionRect { get; private set; }
 
     public static void Update(Renderer renderer) {
         var worldMouse = renderer.InverseTransformVector(InputHandler.MouseState.Position.ToVector2());
@@ -47,7 +45,7 @@ public static class InteractionSystem {
             if (_currentMode == Mode.Dragging) {
                 var delta = worldMouse - _lastMouseWorldPos;
                 // var delta = snappedWorldMouse - _lastMouseWorldPos;
-                if (delta != Vector2.Zero) {
+                if (delta != Vector2.Zero)
                     foreach (var entity in Map.SelectedEntities) {
                         if (!entity.IsAlive()) continue;
                         ref var vis = ref entity.Get<Visual>();
@@ -61,7 +59,6 @@ public static class InteractionSystem {
                         // 2. 递归移动该实体及其所有子孙
                         MoveRecursive(entity, delta);
                     }
-                }
             } else if (_currentMode == Mode.Marquee && _selectionStart.HasValue) {
                 // 更新框选矩形
                 var start = _selectionStart.Value;
@@ -80,7 +77,8 @@ public static class InteractionSystem {
                 SpatialSystem.GetEntitiesInRect(SelectionRect.Value, QueryBuffer);
                 foreach (var entity in QueryBuffer) Map.SelectedEntities.Add(entity);
             }
-            if (_currentMode == Mode.Dragging) { // 拖拽结束后执行像素对齐
+
+            if (_currentMode == Mode.Dragging) // 拖拽结束后执行像素对齐
                 foreach (var entity in Map.SelectedEntities) {
                     if (!entity.IsAlive()) continue;
 
@@ -93,7 +91,6 @@ public static class InteractionSystem {
 
                     SnapRecursive(entity);
                 }
-            }
 
             _currentMode = Mode.None;
             _selectionStart = null;
@@ -104,7 +101,7 @@ public static class InteractionSystem {
     }
 
     /// <summary>
-    /// 递归地移动实体及其子孙
+    ///     递归地移动实体及其子孙
     /// </summary>
     /// <param name="entity"></param>
     /// <param name="delta"></param>
@@ -120,13 +117,11 @@ public static class InteractionSystem {
         // 移动子物体
         if (!entity.Has<Hierarchy>()) return;
         ref var hier = ref entity.Get<Hierarchy>();
-        foreach (var child in hier.Children) {
-            MoveRecursive(child, delta);
-        }
+        foreach (var child in hier.Children) MoveRecursive(child, delta);
     }
-    
+
     /// <summary>
-    /// 递归地将实体及其子孙的位置对齐到像素网格
+    ///     递归地将实体及其子孙的位置对齐到像素网格
     /// </summary>
     /// <param name="entity"></param>
     private static void SnapRecursive(Entity entity) {
@@ -140,13 +135,11 @@ public static class InteractionSystem {
         if (!entity.Has<Hierarchy>()) return;
         ref var hier = ref entity.Get<Hierarchy>();
 
-        foreach (var child in hier.Children) {
-            SnapRecursive(child);
-        }
+        foreach (var child in hier.Children) SnapRecursive(child);
     }
 
     /// <summary>
-    /// 对齐到像素网格
+    ///     对齐到像素网格
     /// </summary>
     /// <param name="pos"></param>
     /// <returns></returns>
@@ -159,17 +152,23 @@ public static class InteractionSystem {
 
 
     /// <summary>
-    /// 绘制选择框
+    ///     绘制选择框
     /// </summary>
     /// <param name="renderer"></param>
     public static void DrawSelectionMarquee(ScreenRenderer renderer) {
         if (_currentMode != Mode.Marquee || !SelectionRect.HasValue) return;
 
         var rect = SelectionRect.Value;
-        Vector2 pos  = new(rect.X, rect.Y);
+        Vector2 pos = new(rect.X, rect.Y);
         Vector2 size = new(rect.Width, rect.Height);
-        
+
         renderer.SpriteBatch.Draw(Content.Tex.Pixel, rect, Color.Cyan * 0.2f);
         GizmoSystem.DrawHollowRect(renderer, pos, size, Color.Cyan, 1);
+    }
+
+    private enum Mode {
+        None,
+        Dragging,
+        Marquee
     }
 }

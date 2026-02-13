@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Arch.Core;
-using Cornifer.Input;
 using Cornifer.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
 
 namespace Cornifer;
 
@@ -20,7 +17,7 @@ public static class Map {
     }
 
     /// <summary>
-    /// 在指定世界坐标放置一个实体
+    ///     在指定世界坐标放置一个实体
     /// </summary>
     public static Entity Place(
         string name,
@@ -29,10 +26,10 @@ public static class Map {
         Layer layer = Layer.Objects
     ) {
         Console.WriteLine($"Placing Entity: {name} at {worldPos} in layer {layer}");
-        
-        const int shadowAmount = 2;     // 阴影扩展量
 
-        var sdf = ShadowSystem.GetOrCreateSdf(tex, shadowAmount+1);
+        const int shadowAmount = 2; // 阴影扩展量
+
+        var sdf = ShadowSystem.GetOrCreateSdf(tex, shadowAmount + 1);
 
         return World.Create(
             new Identifier { Name = name },
@@ -40,7 +37,7 @@ public static class Map {
                 Texture = tex,
                 Visible = true,
                 WorldPosition = worldPos,
-                OriginOffset = new Vector2(MathF.Round(tex.Width / 2f), MathF.Round(tex.Height / 2f)),
+                OriginOffset = new Vector2(MathF.Round(tex.Width / 2f), MathF.Round(tex.Height / 2f))
             },
             new Hierarchy(),
             new LayerMember { Layer = layer, Locked = false },
@@ -48,7 +45,7 @@ public static class Map {
                 SdfTexture = sdf,
                 Amount = shadowAmount,
                 Color = Color.DeepPink,
-                Offset = new Vector2(-shadowAmount-1, -shadowAmount-1)
+                Offset = new Vector2(-shadowAmount - 1, -shadowAmount - 1)
             }
         );
     }
@@ -64,13 +61,14 @@ public static class Map {
             var e = Place($"Object_{i}", randomPos, tex, (Layer)rand.Next(0, 4));
             if (rand.Next(0, 2) != 0) continue;
             HierarchySystem.SetParent(
-                e, 
-                Place($"Object_Child_{i}", new Vector2(randomPos.X+100, randomPos.Y+100), Content.Tex.SlugcatIcons, (Layer)rand.Next(0, 4)), 
+                e,
+                Place($"Object_Child_{i}", new Vector2(randomPos.X + 100, randomPos.Y + 100), Content.Tex.SlugcatIcons,
+                    (Layer)rand.Next(0, 4)),
                 Vector2.Zero,
                 Vector2.Zero
-                );
+            );
         }
-        
+
         // 在原点放置一个中心物体
         Place("Object_Center", Vector2.Zero, Content.Tex.MiscSprites);
     }
