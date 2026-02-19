@@ -20,8 +20,8 @@ public static class ShadowSystem {
                 // 左下角为原点 
                 // DrawPos.Y = World.Y - (Texture.H - Local.Y)
                 Vector2 drawPos = new(
-                    vis.WorldPosition.X - vis.OriginOffset.X,
-                    vis.WorldPosition.Y - (vis.Texture.Height - vis.OriginOffset.Y)
+                    vis.AnchorPosition.X - vis.TextureCenterOffset.X,
+                    vis.AnchorPosition.Y - (vis.Texture.Height - vis.TextureCenterOffset.Y)
                 );
 
                 drawPos += sha.Offset;

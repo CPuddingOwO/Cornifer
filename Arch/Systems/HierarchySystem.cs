@@ -51,8 +51,8 @@ public static class HierarchySystem {
             if (!hier.Parent.HasValue || !hier.Parent.Value.IsAlive()) return;
 
             ref var parentVis = ref hier.Parent.Value.Get<Visual>();
-            cameraRenderer.SpriteBatch.DrawLine(parentVis.WorldPosition + hier.SourceOffset,
-                vis.WorldPosition + hier.TargetOffset, Color.Yellow);
+            cameraRenderer.SpriteBatch.DrawLine(parentVis.AnchorPosition + hier.SourceOffset,
+                vis.AnchorPosition + hier.TargetOffset, Color.Yellow);
         });
     }
 }

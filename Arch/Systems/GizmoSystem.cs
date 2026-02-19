@@ -16,14 +16,14 @@ public static class GizmoSystem {
 
             // 1. 计算物体在世界空间中的左上角
             Vector2 worldDrawPos = new(
-                vis.WorldPosition.X - vis.OriginOffset.X,
-                vis.WorldPosition.Y - (vis.Texture.Height - vis.OriginOffset.Y)
+                vis.AnchorPosition.X - vis.TextureCenterOffset.X,
+                vis.AnchorPosition.Y - (vis.Texture.Height - vis.TextureCenterOffset.Y)
             );
 
             // 注意：这里的厚度 thickness 设为 2，它在屏幕上永远是 2 像素，不会随缩放变粗
             DrawHollowRect(renderer, worldDrawPos, vis.Texture.Size(), Color.Cyan, 1);
 
-            renderer.SpriteBatch.Draw(Content.Tex.Pixel, vis.WorldPosition - new Vector2(3, 3),
+            renderer.SpriteBatch.Draw(Content.Tex.Pixel, vis.AnchorPosition - new Vector2(3, 3),
                 null, Color.Yellow, 0, Vector2.Zero, new Vector2(6, 6), default, 0);
         }
     }

@@ -138,8 +138,8 @@ public static class Interface {
                     ImGui.Separator();
                     ImGui.Text(entity.TryGet<Identifier>(out var id) ? $"对象 ID: {id.Name}" : "对象 ID: 未知");
                     ImGui.Text(entity.TryGet<LayerMember>(out var layer) ? $"图层: {layer.Layer}" : "图层: 未知");
-                    ImGui.Text($"WPos: ({v.WorldPosition.X:F2}, {v.WorldPosition.Y:F2})");
-                    ImGui.Text($"LPos: {v.OriginOffset.X:F2}, {v.OriginOffset.Y:F2})");
+                    ImGui.Text($"WPos: ({v.AnchorPosition.X:F2}, {v.AnchorPosition.Y:F2})");
+                    ImGui.Text($"LPos: {v.TextureCenterOffset.X:F2}, {v.TextureCenterOffset.Y:F2})");
                     ImGui.EndGroup();
                 }
             } else {

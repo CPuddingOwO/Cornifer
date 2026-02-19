@@ -111,7 +111,7 @@ public static class InteractionSystem {
         // 移动自己
         if (entity.Has<Visual>()) {
             ref var vis = ref entity.Get<Visual>();
-            vis.WorldPosition += delta;
+            vis.AnchorPoint += delta;
         }
 
         // 移动子物体
@@ -129,7 +129,7 @@ public static class InteractionSystem {
 
         if (entity.Has<Visual>()) {
             ref var vis = ref entity.Get<Visual>();
-            vis.WorldPosition = SnapToPixel(vis.WorldPosition);
+            vis.AnchorPoint = SnapToPixel(vis.AnchorPosition);
         }
 
         if (!entity.Has<Hierarchy>()) return;

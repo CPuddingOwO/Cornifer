@@ -37,15 +37,16 @@ public static class Map {
             new Visual {
                 Texture = tex,
                 Visible = true,
-                WorldPosition = worldPos,
-                OriginOffset = new Vector2(MathF.Round(tex.Width / 2f), MathF.Round(tex.Height / 2f))
+                AnchorPoint = worldPos,
+                // TextureCenterOffset = new Vector2(MathF.Round(tex.Width / 2f), MathF.Round(tex.Height / 2f))
+                TextureCenterOffset = Vector2.Zero
             },
             new Hierarchy(),
             new LayerMember { Layer = layer, Locked = false },
             new Shadow {
                 SdfTexture = sdf,
                 Amount = shadowAmount,
-                Color = Color.DeepPink,
+                Color = Color.Black,
                 Offset = new Vector2(-shadowAmount - 1, -shadowAmount - 1)
             }
         );
