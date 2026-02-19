@@ -74,14 +74,6 @@
     <ItemGroup>
         <Compile Remove="Content\bin\**"/>
         <Compile Remove="Content\obj\**"/>
-        <Compile Remove="Renderer\CaptureRenderer.cs"/>
-        <Compile Remove="Renderer\ICapturingRenderer.cs"/>
-        <Compile Remove="Renderer\ImageMapRenderer.cs"/>
-        <Compile Remove="Renderer\ShadeRenderer.cs"/>
-        <Compile Remove="Renderers\ShadeRenderer.cs"/>
-        <Compile Remove="Renderers\CaptureRenderer.cs"/>
-        <Compile Remove="Renderers\ICapturingRenderer.cs"/>
-        <Compile Remove="Renderers\ImageMapRenderer.cs"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -89,18 +81,51 @@
         <ClCompile Include="Content\Effect\ShadowShader.fx"/>
     </ItemGroup>
 
-    <Target Name="GitInfo" AfterTargets="AfterBuild" Condition="Exists('.git')">
-        <Exec Command="git rev-parse --short HEAD" IgnoreExitCode="true">
-            <Output TaskParameter="ConsoleOutput" PropertyName="GitCommit"/>
-        </Exec>
-        <Exec Command="git rev-parse --abbrev-ref HEAD" IgnoreExitCode="true">
-            <Output TaskParameter="ConsoleOutput" PropertyName="GitBranch"/>
-        </Exec>
+    <UsingTask TaskName="GetGitInfoTask" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+        <ParameterGroup>
+            <Commit Output="true"/>
+            <Branch Output="true"/>
+        </ParameterGroup>
+        <Task>
+            <Using Namespace="System.Diagnostics"/>
+            <Code Type="Fragment" Language="cs">
+                <![CDATA[
+        try {
+            Func<string, string> runGit = (args) => {
+                var startInfo = new ProcessStartInfo("git", args) {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                using (var process = Process.Start(startInfo)) {
+                    process.WaitForExit();
+                    return process.StandardOutput.ReadToEnd().Trim();
+                }
+            };
+
+            Commit = runGit("rev-parse --short HEAD");
+            Branch = runGit("rev-parse --abbrev-ref HEAD");
+        } catch {
+            Commit = "Unknown";
+            Branch = "Unknown";
+        }
+        ]]>
+            </Code>
+        </Task>
+    </UsingTask>
+
+    <Target Name="GitDescriptor" AfterTargets="AfterBuild" Condition="Exists('$(MSBuildProjectDirectory)\.git')">
+        <GetGitInfoTask>
+            <Output TaskParameter="Commit" PropertyName="GitCommit"/>
+            <Output TaskParameter="Branch" PropertyName="GitBranch"/>
+        </GetGitInfoTask>
+
         <PropertyGroup>
             <GitCommit Condition="'$(GitCommit)' == ''">Unknown</GitCommit>
             <GitBranch Condition="'$(GitBranch)' == ''">Unknown</GitBranch>
         </PropertyGroup>
-        <WriteLinesToFile File="$(OutDir)/gitinfo" Lines="$(GitCommit)%0a$(GitBranch)" Overwrite="true"/>
+
+        <WriteLinesToFile File="$(OutDir)GitDescriptor" Lines="$(GitCommit);$(GitBranch)" Overwrite="true"/>
     </Target>
 
     <Target Name="DeleteUnusedRuntimes" AfterTargets="AfterBuild" Condition="'$(RuntimeIdentifier)' != ''">
