@@ -1,9 +1,9 @@
-﻿using Cornifer.Renderers;
-using Cornifer.Systems;
+﻿using Cornifer.Arch.Systems;
+using Cornifer.Renderers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Cornifer;
+namespace Cornifer.Arch;
 
 public static class ArchRegister {
     public static void Update(GameTime gt) {

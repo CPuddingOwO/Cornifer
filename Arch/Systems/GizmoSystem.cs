@@ -5,7 +5,7 @@ using Cornifer.Helpers;
 using Cornifer.Renderers;
 using Microsoft.Xna.Framework;
 
-namespace Cornifer.Systems;
+namespace Cornifer.Arch.Systems;
 
 public static class GizmoSystem {
     public static void Draw(ScreenRenderer renderer, HashSet<Entity> selectedEntities) {

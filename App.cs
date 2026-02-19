@@ -1,7 +1,8 @@
 ﻿using System;
+using Cornifer.Arch;
+using Cornifer.Arch.Systems;
 using Cornifer.Input;
 using Cornifer.Renderers;
-using Cornifer.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -49,6 +50,8 @@ public class App : Game {
 
         WorldCamera.Position = new Vector2(-vpSize.X / 2f, -vpSize.Y / 2f);
         CaptureSystem.Initialize(_spriteBatch);
+
+        GitDescriptor.Load();
         base.Initialize();
     }
 

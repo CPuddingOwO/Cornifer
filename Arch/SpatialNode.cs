@@ -2,7 +2,7 @@
 using Arch.Core;
 using Microsoft.Xna.Framework;
 
-namespace Cornifer;
+namespace Cornifer.Arch;
 
 /// <summary>
 ///     工业级四叉树实现，用于快速检索空间内的实体。

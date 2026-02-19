@@ -4,7 +4,7 @@ using Cornifer.Helpers;
 using Cornifer.Renderers;
 using Microsoft.Xna.Framework;
 
-namespace Cornifer.Systems;
+namespace Cornifer.Arch.Systems;
 
 public static class HierarchySystem {
     private static readonly QueryDescription Query = new QueryDescription().WithAll<Visual, Hierarchy>();

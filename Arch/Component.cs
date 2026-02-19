@@ -1,9 +1,10 @@
 ﻿using System.Collections.Generic;
 using Arch.Core;
+using Cornifer.Rw;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Cornifer;
+namespace Cornifer.Arch;
 
 public struct Identifier {
     public string Name;
@@ -35,4 +36,8 @@ public struct Hierarchy() {
 public struct LayerMember {
     public Layer Layer;
     public bool Locked;
+}
+
+public struct Metadata {
+    public Mod SourceMod;
 }

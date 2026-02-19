@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Cornifer.Systems;
+namespace Cornifer.Arch.Systems;
 
 public static class CaptureSystem {
     private static ScreenRenderer _renderer = null!;
@@ -21,7 +21,7 @@ public static class CaptureSystem {
         _renderer.Position = new Vector2(bounds.Left - padding, bounds.Top - padding);
         _renderer.Scale = 1f;
 
-        _renderer.UpdateBuffer(device, width, height);
+        // _renderer.UpdateBuffer(device, width, height);
 
         device.SetRenderTarget(buffer);
         device.Clear(Color.Transparent);

@@ -1,6 +1,6 @@
 ﻿using Arch.Core;
 
-namespace Cornifer;
+namespace Cornifer.Arch;
 
 public static class ArchInspector {
     public static void Draw(Entity entity) {

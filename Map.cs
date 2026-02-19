@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using Arch.Core;
-using Cornifer.Systems;
+using Cornifer.Arch;
+using Cornifer.Arch.Systems;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -23,7 +24,7 @@ public static class Map {
         string name,
         Vector2 worldPos,
         Texture2D tex,
-        Layer layer = Layer.Objects
+        Layer layer
     ) {
         Console.WriteLine($"Placing Entity: {name} at {worldPos} in layer {layer}");
 
@@ -70,6 +71,6 @@ public static class Map {
         }
 
         // 在原点放置一个中心物体
-        Place("Object_Center", Vector2.Zero, Content.Tex.MiscSprites);
+        Place("Object_Center", Vector2.Zero, Content.Tex.MiscSprites, Layer.Object);
     }
 }

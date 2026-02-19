@@ -7,7 +7,7 @@ using Cornifer.Renderers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 
-namespace Cornifer.Systems;
+namespace Cornifer.Arch.Systems;
 
 public static class InteractionSystem {
     private static Mode _currentMode = Mode.None;

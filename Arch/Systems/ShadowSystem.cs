@@ -5,7 +5,7 @@ using Cornifer.Renderers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Cornifer.Systems;
+namespace Cornifer.Arch.Systems;
 
 public static class ShadowSystem {
     private static readonly Dictionary<(Texture2D tex, int pad), Texture2D> SdfCache = new();

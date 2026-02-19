@@ -5,7 +5,7 @@ using Arch.Core.Extensions;
 using Cornifer.Helpers;
 using Microsoft.Xna.Framework;
 
-namespace Cornifer.Systems;
+namespace Cornifer.Arch.Systems;
 
 public static class SpatialSystem {
     private static SpatialNode? _root;

@@ -3,7 +3,7 @@ using Arch.Core;
 using Cornifer.Renderers;
 using Microsoft.Xna.Framework;
 
-namespace Cornifer.Systems;
+namespace Cornifer.Arch.Systems;
 
 public static class VisualSystem {
     public static void Draw(World world, ScreenRenderer renderer) {

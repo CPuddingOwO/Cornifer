@@ -1,8 +1,9 @@
 ﻿using System;
 using System.IO;
 using Arch.Core.Extensions;
+using Cornifer.Arch;
+using Cornifer.Arch.Systems;
 using Cornifer.Input;
-using Cornifer.Systems;
 using ImGuiNET;
 using Microsoft.Xna.Framework;
 using MonoGame.ImGuiNet;
