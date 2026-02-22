@@ -17,12 +17,12 @@ public static class SpriteBatchExtensions {
     ///     该方法利用 1x1 像素贴图进行缩放和旋转。
     ///     旋转中心设置为 <c>new Vector2(0, 0.5f)</c>，这确保了线条宽度是围绕中心线向两侧扩展的。
     /// </remarks>
-    public static void DrawLine(this SpriteBatch spriteBatch, Vector2 p1, Vector2 p2, Color color,
+    public static void Line(this SpriteBatch spriteBatch, Vector2 p1, Vector2 p2, Color color,
         float thickness = 1) {
         var diff = p2 - p1;
         var angle = MathF.Atan2(diff.Y, diff.X);
         spriteBatch.Draw(Content.Tex.Pixel, p1, null, color, angle, new Vector2(0, .5f),
-            new Vector2(diff.Length(), thickness), SpriteEffects.None, 0);
+            new Vector2(diff.Length(), thickness), default, 0);
     }
 
     /// <summary>
@@ -40,10 +40,10 @@ public static class SpriteBatchExtensions {
     /// <example>
     ///     绘制一条红白相间的虚线
     ///     <code>
-    /// spriteBatch.DrawDashLine(start, end, Color.Red, Color.White, 10f, 5f);
+    /// SpriteBatch.LineDashed(start, end, Color.Red, Color.White, 10f, 5f);
     /// </code>
     /// </example>
-    public static void DrawDashLine(this SpriteBatch spriteBatch, Vector2 p1, Vector2 p2, Color dashColor,
+    public static void LineDashed(this SpriteBatch spriteBatch, Vector2 p1, Vector2 p2, Color dashColor,
         Color? emptyColor, float dashLength, float? emptyLength = null, float thickness = 1,
         float? startOffset = null) {
         emptyLength ??= dashLength;
@@ -69,7 +69,7 @@ public static class SpriteBatchExtensions {
             var color = dash ? dashColor : emptyColor;
 
             // 只有在颜色不为 null 时才调用绘制，实现透明间隙
-            if (color.HasValue) spriteBatch.DrawLine(pos, nextPos, color.Value, thickness);
+            if (color.HasValue) spriteBatch.Line(pos, nextPos, color.Value, thickness);
 
             dash = !dash;
             pos = nextPos;

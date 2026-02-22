@@ -88,6 +88,7 @@ public static class Interface {
             ImGui.BeginGroup();
             ImGui.Text($"相机位置 ({App.WorldCamera.Position.X:F2}, {App.WorldCamera.Position.Y:F2})");
             ImGui.Text($"相机缩放 {App.WorldCamera.Scale:F2}");
+            ImGui.Text($"鼠标坐标 ({InputHandler.MousePoint.X:F2}, {InputHandler.MousePoint.Y:F2})");
             ImGui.EndGroup();
 
             if (ImGui.CollapsingHeader("视图控制", ImGuiTreeNodeFlags.DefaultOpen))
@@ -138,8 +139,8 @@ public static class Interface {
                     ImGui.Separator();
                     ImGui.Text(entity.TryGet<Identifier>(out var id) ? $"对象 ID: {id.Name}" : "对象 ID: 未知");
                     ImGui.Text(entity.TryGet<LayerMember>(out var layer) ? $"图层: {layer.Layer}" : "图层: 未知");
-                    ImGui.Text($"WPos: ({v.AnchorPosition.X:F2}, {v.AnchorPosition.Y:F2})");
-                    ImGui.Text($"LPos: {v.TextureCenterOffset.X:F2}, {v.TextureCenterOffset.Y:F2})");
+                    ImGui.Text($"Anchor: ({v.AnchorPosition.X:F2}, {v.AnchorPosition.Y:F2})");
+                    ImGui.Text($"TopLeft: {v.VisualTopLeftPosition.X:F2}, {v.VisualTopLeftPosition.Y:F2})");
                     ImGui.EndGroup();
                 }
             } else {
@@ -150,6 +151,6 @@ public static class Interface {
         }
 
         // ImGui.ShowStyleEditor();
-        ImGui.ShowDemoWindow();
+        // ImGui.ShowDemoWindow();
     }
 }

@@ -25,24 +25,34 @@ public struct Visual {
     public bool Visible;
 
     /// <summary>
-    /// 锚点坐标
+    /// 锚点坐标 中心
     /// </summary>
     public Vector2 AnchorPoint;
 
     /// <summary>
-    /// 纹理中心相对于锚点的偏移
+    /// 锚点相对于纹理左上角的偏移 *四舍五入 后的 Width/2, Height/2
     /// </summary>
-    public Vector2 TextureCenterOffset; // Entity中心相对于锚点的偏移
+    public Vector2 TextureOffset;
 
     /// <summary>
-    /// *Readonly 锚点坐标 MonoGame默认左上角
+    /// *Readonly 锚点坐标
     /// </summary>
     public Vector2 AnchorPosition => AnchorPoint;
-
+    
     /// <summary>
-    /// *Readonly 中心坐标 纹理正中心
+    /// 获取纹理在世界/屏幕中实际渲染的左上角坐标
     /// </summary>
-    public Vector2 CenterPosition => AnchorPoint + TextureCenterOffset;
+    public Vector2 VisualTopLeftPosition => AnchorPosition - TextureOffset;
+    
+    /// <summary>
+    /// 获取该纹理在世界坐标中实际占用的矩形区域 (左上角起始)
+    /// </summary>
+    public Rectangle Bounds => new Rectangle(
+        (int)(AnchorPosition.X - TextureOffset.X),
+        (int)(AnchorPosition.Y - TextureOffset.Y),
+        Texture.Width,
+        Texture.Height
+    );
 }
 
 /// <summary>
@@ -74,8 +84,10 @@ public struct Hierarchy() {
     public Entity? Parent = null;
     public readonly List<Entity> Children = [];
 
-    public Vector2 SourceOffset = Vector2.Zero; // 父物体上连线的本地位置
-    public Vector2 TargetOffset = Vector2.Zero; // 子物体上连线的本地位置
+    public Vector2 SourceOffset = Vector2.Zero; // 相对于父物体 CenterPosition 的偏移
+    public Vector2 TargetOffset = Vector2.Zero; // 相对于子物体 CenterPosition 的偏移
+    
+    public bool Visible = true; // 是否显示连线
 }
 
 public struct LayerMember {

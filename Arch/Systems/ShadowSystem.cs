@@ -17,15 +17,6 @@ public static class ShadowSystem {
             world.Query(in query, (ref Visual vis, ref LayerMember lm, ref Shadow sha) => {
                 if (lm.Layer != layer || !vis.Visible) return;
 
-                // 左下角为原点 
-                // DrawPos.Y = World.Y - (Texture.H - Local.Y)
-                Vector2 drawPos = new(
-                    vis.AnchorPosition.X - vis.TextureCenterOffset.X,
-                    vis.AnchorPosition.Y - (vis.Texture.Height - vis.TextureCenterOffset.Y)
-                );
-
-                drawPos += sha.Offset;
-
                 var effect = Content.Eft.Shadow;
                 effect.Parameters["SdfTexture"]?.SetValue(sha.SdfTexture);
                 effect.Parameters["ShadowAmount"]?.SetValue((float)sha.Amount);
@@ -37,10 +28,21 @@ public static class ShadowSystem {
                 //     )
                 // );
 
+                // renderer.SpriteBatch.Draw(
+                //     sha.SdfTexture,
+                //     vis.CenterPosition + sha.Offset,
+                //     Color.White
+                // );
                 renderer.SpriteBatch.Draw(
-                    sha.SdfTexture,
-                    drawPos,
-                    Color.White
+                    sha.SdfTexture, 
+                    vis.AnchorPosition + sha.Offset,
+                    null, 
+                    Color.White, 
+                    0f, 
+                    vis.TextureOffset,
+                    1f, 
+                    SpriteEffects.None, 
+                    0f
                 );
             });
         }

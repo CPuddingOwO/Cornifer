@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using Arch.Core;
 using Arch.Core.Extensions;
 using Cornifer.Input;
 using Cornifer.Renderers;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using Color = Microsoft.Xna.Framework.Color;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 
 namespace Cornifer.Arch.Systems;
 
@@ -14,7 +17,7 @@ public static class InteractionSystem {
     private static Vector2? _selectionStart;
     private static Vector2 _lastMouseWorldPos;
     private static readonly List<Entity> QueryBuffer = new(128);
-    public static Rectangle? SelectionRect { get; private set; }
+    public static RectangleF? SelectionRect { get; private set; }
 
     public static void Update(Renderer renderer) {
         var worldMouse = renderer.InverseTransformVector(InputHandler.MouseState.Position.ToVector2());
@@ -66,7 +69,7 @@ public static class InteractionSystem {
                 var y = Math.Min(start.Y, worldMouse.Y);
                 var w = Math.Max(1, Math.Abs(start.X - worldMouse.X));
                 var h = Math.Max(1, Math.Abs(start.Y - worldMouse.Y));
-                SelectionRect = new Rectangle((int)x, (int)y, (int)w, (int)h);
+                SelectionRect = new RectangleF(x, y, w, h);
             }
         }
 
@@ -74,7 +77,13 @@ public static class InteractionSystem {
         if (InputHandler.SelectEntity.JustReleased) {
             if (_currentMode == Mode.Marquee && SelectionRect.HasValue) {
                 QueryBuffer.Clear();
-                SpatialSystem.GetEntitiesInRect(SelectionRect.Value, QueryBuffer);
+                var rect = new Rectangle(
+                    (int)SelectionRect.Value.X,
+                    (int)SelectionRect.Value.Y,
+                    (int)SelectionRect.Value.Width,
+                    (int)SelectionRect.Value.Height
+                );
+                SpatialSystem.GetEntitiesInRect(rect, QueryBuffer);
                 foreach (var entity in QueryBuffer) Map.SelectedEntities.Add(entity);
             }
 
@@ -141,8 +150,8 @@ public static class InteractionSystem {
     /// <summary>
     ///     对齐到像素网格
     /// </summary>
-    /// <param name="pos"></param>
-    /// <returns></returns>
+    /// <param name="pos">坐标点</param>
+    /// <returns>坐标点四舍五入到整数的值</returns>
     private static Vector2 SnapToPixel(Vector2 pos) {
         return new Vector2(
             MathF.Round(pos.X),
@@ -152,9 +161,9 @@ public static class InteractionSystem {
 
 
     /// <summary>
-    ///     绘制选择框
+    /// 绘制选择框
     /// </summary>
-    /// <param name="renderer"></param>
+    /// <param name="renderer">屏幕渲染器</param>
     public static void DrawSelectionMarquee(ScreenRenderer renderer) {
         if (_currentMode != Mode.Marquee || !SelectionRect.HasValue) return;
 
@@ -162,8 +171,11 @@ public static class InteractionSystem {
         Vector2 pos = new(rect.X, rect.Y);
         Vector2 size = new(rect.Width, rect.Height);
 
-        renderer.SpriteBatch.Draw(Content.Tex.Pixel, rect, Color.Cyan * 0.2f);
-        GizmoSystem.DrawHollowRect(renderer, pos, size, Color.Cyan, 1);
+        var thickness = 2f / renderer.Scale;
+        
+        // renderer.SpriteBatch.Draw(Content.Tex.Pixel, rect, Color.Cyan * 0.2f);
+        GizmoSystem.RectFilled(renderer, pos, size, Color.Cyan * 0.2f, thickness);
+        GizmoSystem.Rect(renderer, pos, size, Color.Cyan, thickness);
     }
 
     private enum Mode {

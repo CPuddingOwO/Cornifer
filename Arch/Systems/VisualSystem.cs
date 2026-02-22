@@ -11,15 +11,18 @@ public static class VisualSystem {
             var query = new QueryDescription().WithAll<Visual, LayerMember>();
             world.Query(in query, (ref Visual vis, ref LayerMember lm) => {
                 if (lm.Layer != layer || !vis.Visible) return;
-
-                // 左下角为原点 
-                // DrawPos.Y = World.Y - (Texture.H - Local.Y)
-                var drawPos = new Vector2(
-                    vis.AnchorPosition.X - vis.TextureCenterOffset.X,
-                    vis.AnchorPosition.Y - (vis.Texture.Height - vis.TextureCenterOffset.Y)
+                // renderer.SpriteBatch.Draw(vis.Texture, vis.CenterPosition, Color.White);
+                renderer.SpriteBatch.Draw(
+                    vis.Texture, 
+                    vis.AnchorPosition,
+                    null, 
+                    Color.White, 
+                    0f, 
+                    vis.TextureOffset,
+                    1f, 
+                    default,
+                    0f
                 );
-
-                renderer.SpriteBatch.Draw(vis.Texture, drawPos, Color.White);
             });
         }
     }

@@ -29,28 +29,25 @@ public static class SpatialSystem {
         _root ??= new SpatialNode(mapSize);
         _root.Clear();
 
-        // 重置统计数据
         _allEntities.Clear();
         int minX = int.MaxValue, minY = int.MaxValue;
         int maxX = int.MinValue, maxY = int.MinValue;
         var hasEntities = false;
 
         var query = new QueryDescription().WithAll<Visual>();
+    
+        // 只需要这一趟遍历即可
         world.Query(in query, (Entity entity, ref Visual vis) => {
-            Rectangle bounds = new(
-                (int)(vis.AnchorPosition.X - vis.TextureCenterOffset.X),
-                (int)(vis.AnchorPosition.Y - (vis.Texture.Height - vis.TextureCenterOffset.Y)),
-                vis.Texture.Width,
-                vis.Texture.Height
-            );
+            // 统一使用 Visual 结构体内部定义的 Bounds
+            Rectangle bounds = vis.Bounds;
 
             // 1. 插入四叉树
             _root.Insert(entity, bounds);
 
-            // 2. 顺便收集所有实体
+            // 2. 收集所有实体
             _allEntities.Add(entity);
 
-            // 3. 顺便计算最小包围矩形 (MBR)
+            // 3. 计算 MBR (最小包围矩形)
             if (bounds.Left < minX) minX = bounds.Left;
             if (bounds.Top < minY) minY = bounds.Top;
             if (bounds.Right > maxX) maxX = bounds.Right;
@@ -58,22 +55,10 @@ public static class SpatialSystem {
             hasEntities = true;
         });
 
-        // 更新最终边界
         if (hasEntities)
             ContentBounds = new Rectangle(minX, minY, maxX - minX, maxY - minY);
         else
             ContentBounds = Rectangle.Empty;
-
-        world.Query(in query, (Entity entity, ref Visual vis) => {
-            // 计算实体在世界中的实际矩形范围（基于左下角对齐逻辑反推左上角）
-            Rectangle bounds = new(
-                (int)(vis.AnchorPosition.X - vis.TextureCenterOffset.X),
-                (int)(vis.AnchorPosition.Y - (vis.Texture.Height - vis.TextureCenterOffset.Y)),
-                vis.Texture.Width,
-                vis.Texture.Height
-            );
-            _root.Insert(entity, bounds);
-        });
     }
 
     /// <summary>
@@ -123,53 +108,33 @@ public static class SpatialSystem {
     /// </summary>
     private static bool IsRectPixelHit(Entity entity, Rectangle worldRect) {
         ref var vis = ref entity.Get<Visual>();
+        var entityBounds = vis.Bounds; // 使用统一的 Bounds
 
-        // 计算实体的世界空间边界矩形
-        Rectangle entityBounds = new(
-            (int)(vis.AnchorPosition.X - vis.TextureCenterOffset.X),
-            (int)(vis.AnchorPosition.Y - (vis.Texture.Height - vis.TextureCenterOffset.Y)),
-            vis.Texture.Width,
-            vis.Texture.Height
-        );
-
-        // 计算两个矩形的公共交集部分
         var intersection = Rectangle.Intersect(entityBounds, worldRect);
         if (intersection.IsEmpty) return false;
 
-        // 遍历交集区域内的每一个像素
         for (var y = intersection.Top; y < intersection.Bottom; y++)
         for (var x = intersection.Left; x < intersection.Right; x++) {
-            // 将当前遍历的世界坐标转回纹理局部坐标
-            // 公式同 IsPixelHit: localX = x - entityLeft
+            // 核心：这里的换算逻辑必须和 IsPixelHit 一致
             var texX = x - entityBounds.X;
             var texY = y - entityBounds.Y;
 
-            // 采样像素 Alpha 值
-            var pixel = TextureCache.GetPixelAt(vis.Texture, texX, texY);
-
-            // 只要找到一个非透明像素在矩形内，即视为命中
-            if (pixel.A > 0) return true;
+            if (TextureCache.GetPixelAt(vis.Texture, texX, texY).A > 0) return true;
         }
-
         return false;
     }
 
-    private static bool IsPixelHit(Entity entity, Vector2 worldPos) {
+    private static bool IsPixelHit(Entity entity, Vector2 pos) {
         ref var vis = ref entity.Get<Visual>();
+        var bounds = vis.Bounds;
 
-        // 1. 将世界坐标转回纹理局部坐标 (Local Space)
-        // 计算公式推导：worldPos.X = drawPos.X + localX
-        // 所以：localX = worldPos.X - (vis.WorldPos.X - vis.LocalPos.X)
-        var localX = worldPos.X - (vis.AnchorPosition.X - vis.TextureCenterOffset.X);
-        var localY = worldPos.Y - (vis.AnchorPosition.Y - (vis.Texture.Height - vis.TextureCenterOffset.Y));
+        // 只要把鼠标点减去矩形的左上角，就是纹理坐标
+        var localX = (int)(pos.X - bounds.X);
+        var localY = (int)(pos.Y - bounds.Y);
 
-        var texX = (int)localX;
-        var texY = (int)localY;
+        if (localX < 0 || localX >= bounds.Width || localY < 0 || localY >= bounds.Height)
+            return false;
 
-        // 2. 采样像素 Alpha 值
-        var pixel = TextureCache.GetPixelAt(vis.Texture, texX, texY);
-
-        // 如果 Alpha > 0，认为命中了非透明区域
-        return pixel.A > 0;
+        return TextureCache.GetPixelAt(vis.Texture, localX, localY).A > 0;
     }
 }

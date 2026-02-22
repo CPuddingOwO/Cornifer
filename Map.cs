@@ -28,7 +28,7 @@ public static class Map {
     ) {
         Console.WriteLine($"Placing Entity: {name} at {worldPos} in layer {layer}");
 
-        const int shadowAmount = 2; // 阴影扩展量
+        const int shadowAmount = 5; // 阴影扩展量
 
         var sdf = ShadowSystem.GetOrCreateSdf(tex, shadowAmount + 1);
 
@@ -38,8 +38,7 @@ public static class Map {
                 Texture = tex,
                 Visible = true,
                 AnchorPoint = worldPos,
-                // TextureCenterOffset = new Vector2(MathF.Round(tex.Width / 2f), MathF.Round(tex.Height / 2f))
-                TextureCenterOffset = Vector2.Zero
+                TextureOffset = new Vector2(MathF.Round(tex.Width / 2f), MathF.Round(tex.Height / 2f))
             },
             new Hierarchy(),
             new LayerMember { Layer = layer, Locked = false },
@@ -55,23 +54,25 @@ public static class Map {
 
     public static void SpawnTestData() {
         // 放置一些随机物体进行测试
-        var tex = Content.Tex.Objects;
-        Random rand = new();
-
-        for (var i = 0; i < 100; i++) {
-            var randomPos = new Vector2(rand.Next(-1000, 1000), rand.Next(-1000, 1000));
-            var e = Place($"Object_{i}", randomPos, tex, (Layer)rand.Next(0, 4));
-            if (rand.Next(0, 2) != 0) continue;
-            HierarchySystem.SetParent(
-                e,
-                Place($"Object_Child_{i}", new Vector2(randomPos.X + 100, randomPos.Y + 100), Content.Tex.SlugcatIcons,
-                    (Layer)rand.Next(0, 4)),
-                Vector2.Zero,
-                Vector2.Zero
-            );
-        }
+        // var tex = Content.Tex.Objects;
+        // Random rand = new();
+        //
+        // for (var i = 0; i < 100; i++) {
+        //     var randomPos = new Vector2(rand.Next(-1000, 1000), rand.Next(-1000, 1000));
+        //     var e = Place($"Object_{i}", randomPos, tex, (Layer)rand.Next(0, 4));
+        //     if (rand.Next(0, 2) != 0) continue;
+        //     e.SetParent(Place($"Object_Child_{i}", new Vector2(randomPos.X + 100, randomPos.Y + 100), Content.Tex.SlugcatIcons,
+        //             (Layer)rand.Next(0, 4)),
+        //         Vector2.Zero,
+        //         Vector2.Zero
+        //     );
+        // }
 
         // 在原点放置一个中心物体
-        Place("Object_Center", Vector2.Zero, Content.Tex.MiscSprites, Layer.Object);
+        var ec = Place("Object_Child", Vector2.Zero, Content.Tex.MiscSprites, Layer.Object);
+        ec.SetParent(Place("Object_Parent", new Vector2(400, 400), Content.Tex.SlugcatIcons, Layer.Object),
+            Vector2.Zero,
+            Vector2.Zero
+        );
     }
 }

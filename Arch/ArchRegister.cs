@@ -20,7 +20,7 @@ public static class ArchRegister {
         // device.Clear(Color.Transparent);
 
         device.SetRenderTarget(null);
-        device.Clear(Color.Transparent);
+        device.Clear(Color.CornflowerBlue);
 
         renderer.SpriteBatch.Begin(
             blendState: BlendState.AlphaBlend,
@@ -42,7 +42,7 @@ public static class ArchRegister {
             samplerState: SamplerState.PointClamp,
             transformMatrix: renderer.Transform);
         VisualSystem.Draw(Map.World, renderer);
-        GizmoSystem.Draw(renderer, Map.SelectedEntities);
+        GizmoSystem.HighlightEntity(renderer, Map.SelectedEntities);
         HierarchySystem.Draw(Map.World, renderer);
         InteractionSystem.DrawSelectionMarquee(renderer);
         renderer.SpriteBatch.End();
