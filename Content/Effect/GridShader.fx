@@ -57,23 +57,23 @@ float4 PS(VSOutput input) : SV_Target {
             return AxisColor;
 
     // ===== 5 单位主网格 =====
-    float2 major = abs(frac(w / 5.0) - 0.5);
-    float majorLine =
-        min(
-            step(major.x, MajorThickness / GridUnit * 0.5),
-            step(major.y, MajorThickness / GridUnit * 0.5)
-        );
-
-    if (majorLine > 0)
-        return MajorColor;
+//    float2 major = abs(frac(w / 5.0) - 0.5);
+//    float majorLine =
+//         min(
+//            step(major.x, MajorThickness / GridUnit * 0.5),
+//            step(major.y, MajorThickness / GridUnit * 0.5)
+//        );
+//
+//    if (majorLine > 0)
+//        return MajorColor;
 
     // ===== 单位点 =====
-    float2 unit = abs(frac(w) - 0.5);
-    float dot =
-        step(max(unit.x, unit.y), MinorDotSize / GridUnit);
+//    float2 unit = abs(frac(w) - 0.5);
+//    float dot =
+//        step(max(unit.x, unit.y), MinorDotSize / GridUnit);
 
-    if (dot > 0)
-        return MinorColor;
+//    if (dot > 0)
+//        return MinorColor;
 
     discard;
     return float4(0,0,0,0);
