@@ -96,7 +96,7 @@ namespace Cornifer
             }
         };
 
-        public static Dictionary<string, List<string>> SlugcatRegionAvailability = new()
+        public static readonly Dictionary<string, List<string>> SlugcatRegionAvailability = new()
         {
             ["Rivulet"] = new() { "SU", "HI", "DS", "CC", "GW", "SH", "VS", "SL", "SI", "LF", "UW", "RM", "SB", "MS" },
             ["Artificer"] = new() { "SU", "HI", "DS", "CC", "GW", "SH", "VS", "LM", "SI", "LF", "UW", "SS", "SB", "LC" },
@@ -106,6 +106,8 @@ namespace Cornifer
 			["Watcher"] = new() { "SU", "HI", "CC", "SH", "LF", "WARA", "WARB", "WARC", "WARD", "WARE", "WARF", "WARG", "WAUA", "WBLA", "WDSR", "WGWR", "WHIR", "WORA", "WPTA", "WRFA", "WRFB", "WRRA", "WRSA", "WSKA", "WSKB", "WSKC", "WSKD", "WSSR", "WSUR", "WTDA", "WTDB", "WVWA", "WVWB", "WMPA", "WPGA" },
 			[""] = new() { "SU", "HI", "DS", "CC", "GW", "SH", "VS", "SL", "SI", "LF", "UW", "SS", "SB" },
         };
+
+		public static readonly HashSet<string> WatcherExclusiveRegions = new() { "WARA", "WARB", "WARC", "WARD", "WARE", "WARF", "WARG", "WAUA", "WBLA", "WDSR", "WGWR", "WHIR", "WORA", "WPTA", "WRFA", "WRFB", "WRRA", "WRSA", "WSKA", "WSKB", "WSKC", "WSKD", "WSSR", "WSUR", "WTDA", "WTDB", "WVWA", "WVWB", "WMPA", "WPGA" };
 
 		public static readonly Dictionary<string, Vector2> VistaRooms = new();
 		public static readonly Dictionary<string, Color> BroadcastColors = new();

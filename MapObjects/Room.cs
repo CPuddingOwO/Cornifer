@@ -596,8 +596,7 @@ namespace Cornifer.MapObjects
 										WarpTarget = obj.TargetRegion;
 										WarpTargetRoom = obj.TargetRoom;
 										RippleWarp = obj.IsRippleWarp ?? false;
-
-										if (obj.Type == "SpinningTopSpot") objects.Add(obj);
+										objects.Add(obj);
 										break;
 									case "WaterCycleTop":
 										WaterCycleTop = (int)MathF.Round(obj.RoomPos.Y);
@@ -610,6 +609,16 @@ namespace Cornifer.MapObjects
 										break;
 									case "WaterCutoff":
 										waterCutoffs.Add(obj);
+										break;
+									case "GoldToken":
+										if (StaticData.WatcherExclusiveRegions.Contains(Region.Id)) {
+											obj.Children.Clear();
+											MapText arenaText = new("ArenaText", Main.DefaultSmallMapFont, "Arena &\nSafari");
+											arenaText.Color.Value = new(null, new(255, 153, 13));
+											arenaText.ParentPosition = new(-30, -45);
+											obj.Children.Add(arenaText);
+										}
+										objects.Add(obj);
 										break;
 									default:
 										objects.Add(obj);
