@@ -67,7 +67,7 @@ namespace Cornifer.UI.Pages
                             Height = 20,
 
                             Selectable = true,
-                            Text = "Use BG for shortcuts",
+                            Text = "Use BG for shortcut entrances",
 
                             SelectedBackColor = Color.White,
                             SelectedTextColor = Color.Black,
@@ -81,14 +81,23 @@ namespace Cornifer.UI.Pages
 							Height = 20,
 
 							Selectable = true,
-							Text = "Draw all shortcuts",
+							Text = "Draw all in-room connections",
 
 							SelectedBackColor = Color.White,
 							SelectedTextColor = Color.Black,
 
 							TextAlign = new(.5f)
 
-						}.BindConfig(InterfaceState.DrawAllShortcuts),
+						}.OnEvent(ClickEvent, (_, _) =>
+						{
+							if (Main.Region is null)
+								return;
+
+							foreach (Room r in Main.Region.Rooms)
+							{
+								r.DrawInRoomShortcuts.Value = true;
+							}
+						}),
 
 						new UIButton
 						{

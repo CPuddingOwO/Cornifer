@@ -983,11 +983,6 @@ namespace Cornifer
                 room.TileMapDirty = true;
         }
 
-		public void ToggleInRoomConnections() {
-			foreach (Room room in Rooms) if (InterfaceState.DrawAllShortcuts.Value) room.DrawInRoomShortcuts.Value = true;
-
-		}
-
 		public JsonObject SaveJson()
         {
             return new()

@@ -56,7 +56,7 @@ namespace Cornifer.MapObjects
         public ObjectProperty<bool> Deathpit = new("deathpit", false);
         public ObjectProperty<bool> UseBetterTileCutout = new("betterTileCutout", true);
         public ObjectProperty<bool> CutoutAllSolidTiles = new("cutAllSolid", false);
-        public ObjectProperty<bool> DrawInRoomShortcuts = new("inRoomShortcuts", InterfaceState.DrawAllShortcuts.Value);
+        public ObjectProperty<bool> DrawInRoomShortcuts = new("inRoomShortcuts", true);
         public ObjectProperty<bool> AcidWater = new("acidWater", false);
         public ObjectProperty<ColorRef> AcidColor = new("acidWater", new(null, Color.Blue));
 
