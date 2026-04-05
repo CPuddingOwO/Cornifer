@@ -173,7 +173,8 @@ namespace Cornifer
 			{ "WeaverSpot",		  (new(48, 86,  28, 34), new(255, 255, 255, 255)) },
 			{ "RippleSpawnEgg",   (new(23, 85,  16, 16), new(0.404f, 0.353f, 0.984f, 0.75f)) },
 
-			{ "PearlPuter",		  (new(78, 99,	43, 22), new(255, 255, 255, 255)) }
+			{ "PearlPuter",		  (new(78, 99,	43, 22), new(255, 255, 255, 255)) },
+			{ "RippleTree",       (new(59, 0,   16, 22), new(255, 255, 255, 255)) }
 		};
 
         static readonly Dictionary<string, (Rectangle Frame, Color Color)> MiscSpriteFrames = new()

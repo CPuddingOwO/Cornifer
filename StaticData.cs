@@ -37,7 +37,7 @@ namespace Cornifer
             "FairyParticleSettings","DayNightSettings","EnergySwirl","LightningMachine","SteamPipe","WallSteamer",
             "Vine","VultureMask","SnowSource","DeathFallFocus","CellDistortion","LocalBlizzard","NeuronSpawner",
             "HangingPearls","Lantern","ExitSymbolAncientShelter","BlinkingFlower", "SpinningTopSpot", "WarpPoint",
-			"Pomegranate", "PlacedBoxWorm", "RippleSpawnEgg", "WeaverSpot", "TerrainHandle", "LocalTerrain"
+			"Pomegranate", "PlacedBoxWorm", "RippleSpawnEgg", "WeaverSpot", "TerrainHandle", "LocalTerrain", "RippleTree"
 		};
 		public static readonly Dictionary<string, string[]> TiedSandboxIDs = new() {
 			["CicadaA"] = new[] { "CicadaB" },
@@ -65,7 +65,7 @@ namespace Cornifer
         // Slugcat -> { DefaultRegion -> StoryRegion }
         // Saint -> { DS -> UG }
         // TODO: equivalences.txt Region.GetProperRegionAcronym
-        public static Dictionary<string, Dictionary<string, string>> SlugcatRegionReplacements = new()
+        public static readonly Dictionary<string, Dictionary<string, string>> SlugcatRegionReplacements = new()
         {
             [""] = new()
             {
