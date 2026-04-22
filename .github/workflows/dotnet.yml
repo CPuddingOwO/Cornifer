@@ -2,36 +2,58 @@ name: .NET
 
 on:
   workflow_dispatch:
-    
   push:
-    branches: [ "master" ]
+    branches: ["master"]
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
 
 jobs:
   build:
-
     runs-on: windows-latest
 
-    steps:
-    - uses: actions/checkout@v3
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0.x
-        
-    - name: Install MGCB
-      run: dotnet tool install -g dotnet-mgcb
-      shell: pwsh
-
-    - name: Build
-      run: |
-        cd "${{ github.workspace }}"
-        dotnet build -c Release
-      shell: pwsh
+    env:
+      DOTNET_VERSION: 6.0.x
+      BUILD_CONFIG: Release
       
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: Build
-        path: bin/Release/net6.0-windows
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+
+      - name: Cache dotnet tools
+        uses: actions/cache@v4
+        with:
+          path: ~/.dotnet/tools
+          key: ${{ runner.os }}-dotnet-tools
+
+      - name: Install MGCB
+        run: |
+          if (!(Get-Command dotnet-mgcb -ErrorAction SilentlyContinue)) {
+            dotnet tool install -g dotnet-mgcb
+          }
+        shell: pwsh
+
+      - name: Restore
+        run: dotnet restore
+        shell: pwsh
+
+      - name: Build
+        run: dotnet build --no-restore -c $env:BUILD_CONFIG
+        shell: pwsh
+
+      - name: Prepare folder
+        run: |
+          mkdir Out/Cornifer
+          Copy-Item -Recurse bin/Release/net6.0-windows/* Out/Cornifer/
+        shell: pwsh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cornifer
+          path: Out
