@@ -39,7 +39,7 @@ jobs:
         shell: pwsh
 
       - name: Restore
-        run: dotnet restore
+        run: dotnet restore --use-lock-file
         shell: pwsh
 
       - name: Build
